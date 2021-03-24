@@ -28,7 +28,7 @@ def get_hot_comment(AV):
     for l in s_text:
         if len(l) != 0:
             text_list.append(l)
-    hot_word = text_list[3]
+    hot_word = text_list[len(text_list)-1]
     max_word = text_list.count(hot_word)
 
     for l in text_list:
@@ -38,5 +38,5 @@ def get_hot_comment(AV):
     print(hot_word,'appeared for {} times'.format(max_word))
     print(text_list)
 
-get_user_detail(44605243)
-get_hot_comment(312361287)
+get_user_detail(44605243)#get the follow and fans statistic 
+get_hot_comment(312361287)#get the hot worf statistic
