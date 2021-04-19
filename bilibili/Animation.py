@@ -9,8 +9,7 @@ from bs4 import BeautifulSoup
 import os
 import json
 import configparser
-
-
+import urllib
 
 class Animation(object):
     def __init__(self, headers: dict, path: str, api_path='./api.cfg'):
@@ -59,8 +58,13 @@ class Animation(object):
             print("Cover Link: %s"%info['cover'])
             print(" ")
 
-    def download_cover(self):
-        pass
+    def download_cover(self, url, idx):
+        opener = urllib.request.build_opener()
+        opener.addheaders = [item for item in self.headers.items()]
+        urllib.request.install_opener(opener)
+        urllib.request.urlretrieve(
+            url=url, 
+            filename=os.path.join(self.path, "%d_am_cover.png"%idx))
 
 
 
@@ -73,3 +77,6 @@ if __name__ == "__main__":
     }
     animation = Animation(headers, "./", "../api.cfg")
     animation.print_animation_info()
+    animation.download_cover(
+        "http://i0.hdslb.com/bfs/bangumi/image/3c125e1aad08643e3eff2fb7d45e740c1a052725.png",
+        0)
