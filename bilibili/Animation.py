@@ -8,66 +8,68 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import json
+import configparser
 
 
 
 class Animation(object):
+    def __init__(self, headers: dict, path: str, api_path='./api.cfg'):
+        self.parser = configparser.ConfigParser()
+        self.parser.read(api_path)
+        self.headers = headers
+        self.path = path
 
-    header = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
-    }
+    def get_sorted_animation_info(self, num=20):
+        param = {
+            'season_version':-1,
+            'area':-1,
+            'is_finish':-1,
+            'copyright':-1,
+            'season_status':-1,
+            'season_month':-1,
+            'year':-1,
+            'style_id':-1,
+            'order':3,
+            'st':1,
+            'sort':0,
+            'page':1,
+            'season_type':1,
+            'pagesize':num,
+            'type':1
+        }
+        data = requests.get(
+            url=self.parser.get("video", "ANIMATION_API"), 
+            params=param, headers=self.headers)
+        sorted_info = []
+        animationlist = data.json()['data']['list']
+        for item in animationlist:
+            info = {k:str(item[k]) for k in ['title', 'order', 'badge', 'index_show', 'link', 'cover']} 
+            sorted_info.append(info)       
+        return sorted_info
 
+    def print_animation_info(self, num=20):
+        sorted_info = self.get_sorted_animation_info(num)
+        for i, info in enumerate(sorted_info):
+            print("Rank: %d"%(i+1))
+            print("Title: %s"%info['title'])
+            print("Like: %s"%info['order'])
+            print("Piece Num: %s"%info['index_show'])
+            print("Authority: %s"%info['badge'])
+            print("Link: %s"%info['link'])
+            print("Cover Link: %s"%info['cover'])
+            print(" ")
 
+    def download_cover(self):
+        pass
 
-    def __init__(self, url, directory):
-        self.s = requests.Session()
-        self.url = url
-        self.dir = directory
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        self.idx = 0
-
-
-
-    def spider(self):
-        s = requests.get(self.url, headers = Animation.header)
-        # print(s)
-
-        if s.status_code == 200:
-            animationlist = s.json()['data']['list']
-
-            for item in animationlist:
-                title = item['title']
-                order = item['order']
-                badge = item['badge']
-                index = item['index_show']
-                link = item['link']
-                url = item['cover']
-                info = title + "\t" + order + "\n" + index + "\t" + badge + "\n番剧链接：" + link + "\n封面链接："+url + "\n封面存放位置:"+self.dir + '/' + "\n"
-                print(info)
 
 
 
 if __name__ == "__main__":
-    while True:
-        inp = None
-
-        try:
-            inp = int(input("番剧数量："))
-        except:
-            pass
-
-        if type(inp) == int:
-            if inp >= 3315:
-                print("超出范围")
-                continue
-            num = inp
-            break
-        if inp == None:
-            num = 20
-            break
-
-    # num = 20
-
-    url = "https://api.bilibili.com/pgc/season/index/result?season_version=-1&area=-1&is_finish=-1&copyright=-1&season_status=-1&season_month=-1&year=-1&style_id=-1&order=3&st=1&sort=0&page=1&season_type=1&pagesize=%d&type=1" %num
-    Animation(url,"./图片").spider()
+    headers = {
+        'Referer':'https://www.bilibili.com/',
+        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
+        'cookie':"",
+    }
+    animation = Animation(headers, "./", "../api.cfg")
+    animation.print_animation_info()
