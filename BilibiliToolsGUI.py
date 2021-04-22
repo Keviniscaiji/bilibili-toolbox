@@ -749,7 +749,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
             "please wait for seconds...", "green"
         )
     def createThread(self, wdcloud, link):
-        wdcloud.set_font_path('../data/font/simhei.ttf')
+        wdcloud.set_font_path('./data/font/simhei.ttf')
         wdcloud.get_wordcloud(
             link
         )
