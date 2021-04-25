@@ -60,8 +60,7 @@ def get_up_video(UID,show,expo):
         print("The producer with UID:", UID, "'s videos that posted recently(maximum 30)(sorted by plays)")
         for l in list:
             print(l[0])
-get_up_video(16001661,True,True)
-#every User of bilibili have one unique UID,enter the uid to porformance the function
-#this function can return the video that posted recently
-# and sort them according to the time of play
-# the use can choose whether to store info in the txt file
+
+if __name__ =="__main__":
+    get_up_video(16001661,True,True)
+
