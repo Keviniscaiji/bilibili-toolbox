@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QLabel, QPushButton, QAction, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QLabel, QPushButton, QAction, QLineEdit, QFileDialog, QHBoxLayout, QDesktopWidget
 from bilibili.HotCommentWordCloud import VideoCommentWordCloud
 from bilibili.Downloader import *
 from bilibili.User import *
@@ -12,7 +12,10 @@ import urllib
 import time
 import ctypes
 import inspect
+from matplotlib import pyplot as plt
 from PIL import Image, ImageQt
+import matplotlib.image as mpimg
+import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 # ----------------------- UTILS ------------------------ #
@@ -166,6 +169,7 @@ class LoginWindow(QtWidgets.QWidget):
 class MainWindow(QtWidgets.QWidget):
     def __init__(self, user_info: dict, _parent):
         super().__init__()
+        self.center()
         self.user_info = user_info
         self.childLyr = []
         self.parentLyr = _parent
@@ -189,6 +193,12 @@ class MainWindow(QtWidgets.QWidget):
         layout.setStretch(0, 5)
         layout.setStretch(1, 13)
         self.setLayout(layout)
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def closeEvent(self, event):
         reply = QtWidgets.QMessageBox.question(
@@ -305,7 +315,7 @@ class RightVideoBox(QtWidgets.QLabel):
             border:1px solid gray;                
             border-radius:10px;         
             padding:2px 4px; }''')
-        self.linkEdit.setPlaceholderText('请输入视频链接')
+        self.linkEdit.setPlaceholderText('please enter the video link')
         # search
         self.searchBtn = QtWidgets.QPushButton(self)
         self.searchBtn.setGeometry(380, 50, 100, 30)
@@ -602,19 +612,19 @@ class WordcloudPreview(QtWidgets.QLabel):
         #lab1 = QLabel()
         #lab1.setPixmap(QPixmap("./download/wordcloud/new_demowordcloud.png").scaled(250, 400))
         self.selectPicture = QPushButton(self)
-        self.selectPicture.setText("预览图片")
+        self.selectPicture.setText("preview picture")
         self.selectPicture.setFont(QtGui.QFont("Microsoft YaHei"))
         self.selectPicture.setGeometry(380, 320, 100, 30)
         self.selectPicture.clicked.connect(self.openimage)
 
         self.openfile = QPushButton(self)
-        self.openfile.setText("打开图片所在文件夹")
+        self.openfile.setText("Open the folder")
         self.openfile.setFont(QtGui.QFont("Microsoft YaHei"))
         self.openfile.setGeometry(190, 320, 180, 30)
         self.openfile.clicked.connect(self.openDownloadFolder)
         # preview picture
         self.previewPicture = QLabel(self)
-        self.previewPicture.setText("                 '此处预览'")
+        self.previewPicture.setText("                 'preview here'")
         #self.previewPicture.setFixedSize(100, 80)
         self.previewPicture.setGeometry(20, 30, 470, 235)
         self.previewPicture.setStyleSheet("QLabel{background:white;}"
@@ -638,7 +648,7 @@ class WordcloudPreview(QtWidgets.QLabel):
             "./download/wordcloud")
 
     def openimage(self):
-        imgName, imgType = QFileDialog.getOpenFileName(self, "打开图片", "./download/wordcloud", "*.png;;*.jpg;;All Files(*)")
+        imgName, imgType = QFileDialog.getOpenFileName(self, "select picture", "./download/wordcloud", "*.png;;*.jpg;;All Files(*)")
         jpg = QtGui.QPixmap(imgName).scaled(self.previewPicture.width(), self.previewPicture.height())
         self.previewPicture.setPixmap(jpg)
 
@@ -666,7 +676,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
                     border-radius:10px;         
                     padding:2px 4px; }''')
 
-        self.linkEdit.setPlaceholderText('请输入bvid')
+        self.linkEdit.setPlaceholderText('please enter the bvid')
         action = QAction(self)
         action.setIcon(QIcon('./data/resource/bk8.png'))
         self.linkEdit.addAction(action, QLineEdit.TrailingPosition)
@@ -683,7 +693,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         # create
         self.createBtn = QtWidgets.QPushButton(self)
         self.createBtn.setGeometry(380, 320, 100, 30)
-        self.createBtn.setText("生成词云")
+        self.createBtn.setText("create wordcloud")
         self.createBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.createBtn.clicked.connect(self.createWordcloud)
         # select picture
@@ -702,11 +712,11 @@ class RightWordcloudCreate(QtWidgets.QLabel):
                                  )
                                  '''
         # openfile
-        self.clearBtn = QtWidgets.QPushButton(self)
-        self.clearBtn.setGeometry(70, 320, 180, 30)
-        self.clearBtn.setText("打开图片所在文件夹")
-        self.clearBtn.setFont(QtGui.QFont("Microsoft YaHei"))
-        self.clearBtn.clicked.connect(self.openDownloadFolder)
+        self.openBtn = QtWidgets.QPushButton(self)
+        self.openBtn.setGeometry(70, 320, 180, 30)
+        self.openBtn.setText("open the folder")
+        self.openBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.openBtn.clicked.connect(self.openDownloadFolder)
         # clear
         self.clearBtn = QtWidgets.QPushButton(self)
         self.clearBtn.setGeometry(260, 320, 100, 30)
@@ -728,23 +738,19 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         info_dict = downloader.get_video_info(link=link)
         qu = downloader.get_supported_quality(info_dict)
         self.infoSignal.emit([info_dict, qu])
-
     def updateQuInfo(self, quInfo):
         self.infoBox.append("Video Information\n")
         self.infoBox.append("name: {}\nbvid: {}\n".format(
             quInfo[0]['title'], quInfo[0]['bvid']))
 
+
     def createWordcloud(self):
         link = self.linkEdit.text()
         wdcloud = VideoCommentWordCloud(getHeaders(True), "./download/wordcloud", "./api.cfg")
         #info_dict = wdcloud.get_wordcloud(link = link)
-
         th = threading.Thread(
             target=self.createThread, args=(wdcloud, link,))
         th.start()
-        '''self.parentLyr.rightLogBox.addLog(
-            "start to create wordcloud {}".format(info_dict['bvid']), "green"
-        )'''
         self.parentLyr.rightLogBox.addLog(
             "please wait for seconds...", "green"
         )
@@ -753,11 +759,20 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         wdcloud.get_wordcloud(
             link
         )
-
         print("finish")
         self.parentLyr.rightLogBox.addLog(
             "creating finished",  "green"
         )
+        '''plt.imshow(wdcloud)
+        plt.axis("off")
+        plt.show()'''
+        self.jumpToPreview()
+    def jumpToPreview(self):
+        lena = mpimg.imread('./download/wordcloud/BV16i4y1A7Ho_wc.png')
+        plt.imshow(lena)
+        plt.show()
+        print("ok")
+
     def openDownloadFolder(self):
         self.getDownloadPath()
         os.startfile(self.downloadFolder)
@@ -1271,6 +1286,7 @@ class SettingFolderBox(QtWidgets.QLabel):
         self.downloadFolder = ""
         self.settingWflag = False
         self.moreWflag = False
+        self.supportWflag = False
         self.initUI()
 
     def initUI(self):
@@ -1298,10 +1314,26 @@ class SettingFolderBox(QtWidgets.QLabel):
         self.moreBtn.setIconSize(QtCore.QSize(30, 30))
         self.moreBtn.setFlat(True)
         self.moreBtn.clicked.connect(self.openMoreWindow)
+        # support us
+        self.supportBtn = QtWidgets.QPushButton(self)
+        self.supportBtn.setIcon(QtGui.QIcon("./data/resource/c1t.png"))
+        self.supportBtn.setGeometry(75, 5, 30, 30)
+        self.supportBtn.setIconSize(QtCore.QSize(30, 30))
+        self.supportBtn.setFlat(True)
+        self.supportBtn.clicked.connect(self.openSupportWindow)
+        # Support Window
+        self.supportWindow = SupportWindow(self)
         # Setting Window
         self.settingWindow = SettingWindow(self)
         # More Window
         self.moreWindow = MoreWindow(self)
+
+    def openSupportWindow(self):
+        if not self.supportWflag:
+            self.supportWindow.show()
+            self.supportWflag = True
+        else:
+            self.supportWindow.close()
 
     def openDownloadFolder(self):
         self.getDownloadPath()
@@ -1326,13 +1358,60 @@ class SettingFolderBox(QtWidgets.QLabel):
         else:
             self.moreWindow.close()
 
-class SettingWindow(QtWidgets.QWidget):
+class SupportWindow(QtWidgets.QWidget):
     def __init__(self, _parent):
         super().__init__()
+        self.center()
         self.childLyr = []
         self.parentLyr = _parent
         _parent.childLyr.append(self)
         self.initUI()
+
+    def initUI(self):
+        self.setFixedSize(320, 480)
+        self.setWindowTitle("Support us!")
+        self.setWindowIcon(QtGui.QIcon("./data/resource/ct1.png"))
+        # set qrcode
+        self.support = QLabel(self)
+        self.support.setPixmap(QPixmap("./data/resource/ma1.png"))
+        #self.support.setFixedSize(80, 80)
+        self.support.setGeometry(60,120,200,200)
+
+        '''hbox = QHBoxLayout(self)
+        lbl = QLabel(self)
+        pixmap = QPixmap("./data/resource/ma1.jpg") 
+        lbl.setPixmap(pixmap) 
+        lbl.setScaledContents(True)
+        hbox.addWidget(lbl)
+        self.setLayout(hbox)
+        self.move(300, 200)
+        self.setWindowTitle('Red Rock')
+        self.show()'''
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def closeEvent(self, event):
+        event.accept()
+        self.parentLyr.supportWflag = False
+
+class SettingWindow(QtWidgets.QWidget):
+    def __init__(self, _parent):
+        super().__init__()
+        self.center()
+        self.childLyr = []
+        self.parentLyr = _parent
+        _parent.childLyr.append(self)
+        self.initUI()
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def initUI(self):
         self.setFixedSize(320, 480)
@@ -1346,6 +1425,7 @@ class SettingWindow(QtWidgets.QWidget):
 class MoreWindow(QtWidgets.QWidget):
     def __init__(self, _parent):
         super().__init__()
+        self.center()
         self.childLyr = []
         self.parentLyr = _parent
         _parent.childLyr.append(self)
@@ -1386,6 +1466,12 @@ class MoreWindow(QtWidgets.QWidget):
         self.loginBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.loginBtn.clicked.connect(self.openLoginWindow)
 
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
     def closeEvent(self, event):
         event.accept()
         self.parentLyr.moreWflag = False
@@ -1403,7 +1489,7 @@ if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
     # --maybe not work-- #
-    # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     # ------------------ #
 
     app = QtWidgets.QApplication(sys.argv)
