@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QAction, QLineEdit, QFileDialog
 from bilibili.HotCommentWordCloud import VideoCommentWordCloud
 from bilibili.Downloader import *
 from bilibili.User import *
+from bilibili.auto_coin import *
+from bilibili.auto_sign import *
 from bilibili.Animation import *
 
 import os
@@ -234,7 +236,8 @@ class RightFuncBox(QtWidgets.QLabel):
         self.rightOperationBox.addTab(RightDownloadBox(self), "download") # 2
         self.rightOperationBox.addTab(WordcloudPreview(self), "preview")  # 3
         self.rightOperationBox.addTab(RightWordcloudCreate(self), "createwordcloud")  # 4
-        self.rightOperationBox.addTab(RightAnimationInfo(self), "automation")  # 5
+        self.rightOperationBox.addTab(RightAutomation(self), "automation")  # 5
+        self.rightOperationBox.addTab(RightLiveBox(self), "live")  # 6
         self.rightOperationBox.setCurrentIndex(0)
         self.rightOperationBox.tabBar().hide()
         # set layout
@@ -258,6 +261,8 @@ class RightFuncBox(QtWidgets.QLabel):
             self.rightOperationBox.setCurrentIndex(4)
         elif name == "automation":
             self.rightOperationBox.setCurrentIndex(5)
+        elif name == "live":
+            self.rightOperationBox.setCurrentIndex(6)
         else:
             self.rightOperationBox.setCurrentIndex(0)
 
@@ -815,7 +820,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         layout.setStretch(0, 1)
         self.setLayout(layout)'''
 
-class RightAnimationInfo(QtWidgets.QLabel):
+class RightAutomation(QtWidgets.QLabel):
     infoSignal = QtCore.pyqtSignal(list)
     def __init__(self, _parent):
         super().__init__()
@@ -830,7 +835,48 @@ class RightAnimationInfo(QtWidgets.QLabel):
         self.setFrameShadow(QtWidgets.QFrame.Raised)
         self.setLineWidth(1)
 
+        # link editor
+        self.linkEdit = QtWidgets.QLineEdit(self)
+        self.linkEdit.setGeometry(20, 50, 350, 30)
+        self.linkEdit.setStyleSheet('''QLineEdit{
+                            border:1px solid gray;                
+                            border-radius:10px;         
+                            padding:2px 4px; }''')
+
+        self.linkEdit.setPlaceholderText('please enter the uid of an UP')
+        action = QAction(self)
+        action.setIcon(QIcon('./data/resource/bk8.png'))
+        self.linkEdit.addAction(action, QLineEdit.TrailingPosition)
+
+        # coins editor
+        self.coinEdit = QtWidgets.QLineEdit(self)
+        self.coinEdit.setGeometry(100, 320, 60, 30)
+        self.coinEdit.setStyleSheet('''QLineEdit{
+                                    border:1px solid gray;                
+                                    border-radius:10px;         
+                                    padding:2px 4px; }''')
+        action = QAction(self)
+        self.coinEdit.addAction(action, QLineEdit.TrailingPosition)
+
+        # search
+
         # info
+        self.infoBox = QtWidgets.QTextBrowser(self)
+        self.infoBox.setGeometry(20, 100, 460, 200)
+        self.infoBox.setFont(QtGui.QFont("Microsoft YaHei"))
+
+        # auto drop coins and like
+        self.coinBtn = QtWidgets.QPushButton(self)
+        self.coinBtn.setGeometry(180, 320, 80, 30)
+        self.coinBtn.setText("drop coin(s)")
+        self.coinBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.coinBtn.clicked.connect(self.dropCoin)
+        # clear
+        self.clearBtn = QtWidgets.QPushButton(self)
+        self.clearBtn.setGeometry(320, 320, 60, 30)
+        self.clearBtn.setText("clear")
+        self.clearBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.clearBtn.clicked.connect(self.clearAll)
         '''self.infoBox = QtWidgets.QTableWidget(0, 1, self)
         self.infoBox.verticalHeader().setVisible(False)
         self.infoBox.horizontalHeader().setVisible(False)
@@ -845,8 +891,6 @@ class RightAnimationInfo(QtWidgets.QLabel):
         #layout.addWidget(self.infoBox)
         layout.setStretch(0, 9)
         self.setLayout(layout)
-
-    # def checkRank(self):
         
     '''def addDownload(self, info_dict):
         num = self.downloadTable.rowCount()
@@ -857,21 +901,29 @@ class RightAnimationInfo(QtWidgets.QLabel):
 
         self.update()
         return obj'''
+    def dropCoin(self):
+        link = self.linkEdit.text()
+        link2 = int(self.coinEdit.text())
+        th = threading.Thread(
+            target = self.dropCoinThread, args = (link,link2,))
+        th.start()
+        self.parentLyr.rightLogBox.addLog(
+            "please wait for seconds...", "green"
+        )
+    def dropCoinThread(self, link, link2):
+        f = open("./cookie.txt", "r")
+        t = f.readline()
+        random_like_coin(t, link, link2)
+        print("finished")
+        self.parentLyr.rightLogBox.addLog(
+            "the video the you try to drop coin and share : "+ link, "green"
+        )
+        f.close
 
-'''class SingleDownloadBox(QtWidgets.QLabel):
-    signal = QtCore.pyqtSignal(float)
-    def __init__(self, _parent, info_dict):
-        super().__init__()
-        self.childLyr = []
-        self.parentLyr = _parent
-        _parent.childLyr.append(self)
-        self.info_dict = info_dict
-        self.initUI(info_dict)
-        self.d_head = 0
-        self.d_thread = None
-        self.status = None
-        self.signal.connect(self.updateBar)
-'''
+    def clearAll(self):
+        self.linkEdit.clear()
+        self.coinEdit.clear()
+        self.infoBox.clear()
 
 class RightLiveBox(QtWidgets.QLabel):
     def __init__(self, _parent):
@@ -885,12 +937,35 @@ class RightLiveBox(QtWidgets.QLabel):
         self.setFrameShape(QtWidgets.QFrame.Box)
         self.setFrameShadow(QtWidgets.QFrame.Raised)
         self.setLineWidth(1)
+
+        self.signBtn = QtWidgets.QPushButton(self)
+        self.signBtn.setGeometry(100, 320, 80, 30)
+        self.signBtn.setText("sign in")
+        self.signBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.signBtn.clicked.connect(self.signIn)
+
         # set layout
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setStretch(0, 1)
         self.setLayout(layout)
+    def signIn(self):
+        th = threading.Thread(
+            target=self.signInThread, args=())
+        th.start()
+        self.parentLyr.rightLogBox.addLog(
+            "please wait for seconds...", "green"
+        )
+    def signInThread(self):
+        f = open("./cookie.txt", "r")
+        t = f.readline()
+        auto_sign(t)
+        print("finished")
+        self.parentLyr.rightLogBox.addLog(
+            "successfully signed in today!", "green"
+        )
+        f.close
 
 class RightLogBox(QtWidgets.QTextBrowser):
     def __init__(self, _parent):
@@ -1170,8 +1245,8 @@ class LeftautomationBtns(QtWidgets.QLabel):
         _parent.childLyr.append(self)
         self.initUI()
         self.setGeometry(0, 0, 200, 40)
-        '''self.previewFlag = False
-        self.taskFlag = False'''
+        self.Flag = False
+        '''self.taskFlag = False'''
 
     def initUI(self):
         self.setFrameShape(QtWidgets.QFrame.Box)
@@ -1207,11 +1282,11 @@ class LeftautomationBtns(QtWidgets.QLabel):
         self.previewBtn.clicked.connect(self.flipToAnimationPreview)'''
         # add task button
         self.addTaskBtn = QtWidgets.QPushButton(
-            QtGui.QIcon("./data/resource/c3s.png"),
-            "check rank",
+            QtGui.QIcon("./data/resource/bik.png"),
+            "support UPs",
             self)
         self.addTaskBtn.setGeometry(20, 40, 160, 30)
-        self.addTaskBtn.setIconSize(QtCore.QSize(20, 20))
+        self.addTaskBtn.setIconSize(QtCore.QSize(30, 30))
         self.addTaskBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.addTaskBtn.setFlat(True)
         self.addTaskBtn.clicked.connect(self.flipToAutomation)
@@ -1234,7 +1309,12 @@ class LeftautomationBtns(QtWidgets.QLabel):
             self.parentLyr.parentLyr.rightFuncBox.flipTabPage("blank")
             self.previewFlag = False'''
     def flipToAutomation(self):
-        self.parentLyr.parentLyr.rightFuncBox.flipTabPage("animationinfocollect")
+        if not self.Flag:
+            self.parentLyr.parentLyr.rightFuncBox.flipTabPage("automation")
+            self.Flag = True
+        else:
+            self.parentLyr.parentLyr.rightFuncBox.flipTabPage("blank")
+            self.Flag = False
 
 class LeftLiveBtns(QtWidgets.QLabel):
     def __init__(self, _parent):
@@ -1243,6 +1323,7 @@ class LeftLiveBtns(QtWidgets.QLabel):
         self.parentLyr = _parent
         _parent.childLyr.append(self)
         self.initUI()
+        self.Flag = False
         self.setGeometry(0, 0, 200, 40)
 
     def initUI(self):
@@ -1263,17 +1344,22 @@ class LeftLiveBtns(QtWidgets.QLabel):
 
         # add task button
         self.addTaskBtn = QtWidgets.QPushButton(
-            QtGui.QIcon("./data/resource/bju.png"),
-            "barrage",
+            QtGui.QIcon("./data/resource/bme.png"),
+            "sign in",
             self)
         self.addTaskBtn.setGeometry(20, 40, 160, 30)
-        self.addTaskBtn.setIconSize(QtCore.QSize(30, 30))
+        self.addTaskBtn.setIconSize(QtCore.QSize(20, 20))
         self.addTaskBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.addTaskBtn.setFlat(True)
-        self.addTaskBtn.clicked.connect(self.flipToDealLive)
+        self.addTaskBtn.clicked.connect(self.flipToSignIn)
 
-    def flipToDealLive(self):
-        self.parentLyr.parentLyr.rightFuncBox.flipTabPage("live")
+    def flipToSignIn(self):
+        if not self.Flag:
+            self.parentLyr.parentLyr.rightFuncBox.flipTabPage("live")
+            self.Flag = True
+        else:
+            self.parentLyr.parentLyr.rightFuncBox.flipTabPage("blank")
+            self.Flag = False
 
 class BlankFilledBox(QtWidgets.QLabel):
     def __init__(self, _parent):
