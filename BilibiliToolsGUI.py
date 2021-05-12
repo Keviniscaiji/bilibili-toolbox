@@ -234,8 +234,7 @@ class RightFuncBox(QtWidgets.QLabel):
         self.rightOperationBox.addTab(RightDownloadBox(self), "download") # 2
         self.rightOperationBox.addTab(WordcloudPreview(self), "preview")  # 3
         self.rightOperationBox.addTab(RightWordcloudCreate(self), "createwordcloud")  # 4
-        # self.rightOperationBox.addTab(RightAnimationPreview(self), "animationinfopreview")  # 5
-        self.rightOperationBox.addTab(RightAnimationInfo(self), "animationinfocollect")  # 5
+        self.rightOperationBox.addTab(RightAnimationInfo(self), "automation")  # 5
         self.rightOperationBox.setCurrentIndex(0)
         self.rightOperationBox.tabBar().hide()
         # set layout
@@ -257,7 +256,7 @@ class RightFuncBox(QtWidgets.QLabel):
             self.rightOperationBox.setCurrentIndex(3)
         elif name == "createwordcloud":
             self.rightOperationBox.setCurrentIndex(4)
-        elif name == "animationinfocollect":
+        elif name == "automation":
             self.rightOperationBox.setCurrentIndex(5)
         else:
             self.rightOperationBox.setCurrentIndex(0)
@@ -660,6 +659,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.parentLyr = _parent
         _parent.childLyr.append(self)
         self.downloadFolder = ""
+        self.openSignal = 0
         self.initUI()
         self.infoSignal.connect(self.updateQuInfo)
 
@@ -731,7 +731,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
 
     def searchVideoInfo(self):
         link = "https://www.bilibili.com/video/" + self.linkEdit.text()
-        th = threading.Thread(target=self.infoThread, args=(link,))
+        th = threading.Thread(target=self.infoThread, args=(link, ))
         th.start()
     def infoThread(self, link):
         downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
@@ -743,6 +743,17 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.infoBox.append("name: {}\nbvid: {}\n".format(
             quInfo[0]['title'], quInfo[0]['bvid']))
 
+    '''def previewWC(self):
+        signal = self.openSignal
+        th = threading.Thread(traget=self.previewThread, args= (signal,))
+        th.start()
+    def previewThread(self, signal, link):
+        if signal == 1:
+            img = Image.open('./download/wordcloud/' + link + '_wc.png')
+            plt.figure("test")
+            plt.imshow(img)
+            plt.show()
+            signal = signal - 1'''
 
     def createWordcloud(self):
         link = self.linkEdit.text()
@@ -931,7 +942,7 @@ class LeftFuncBox(QtWidgets.QLabel):
         # wordcloud buttons
         self.wordcloudBtns = LeftWordcloudBtns(self)
         # animation buttons
-        self.animationBtns = LeftAnimationBtns(self)
+        self.automationBtns = LeftautomationBtns(self)
         # live buttons
         self.liveBtns = LeftLiveBtns(self)
         # blank
@@ -945,7 +956,7 @@ class LeftFuncBox(QtWidgets.QLabel):
         layout.addWidget(self.userInfoBox, 0)
         layout.addWidget(self.downloadBtns, 1)
         layout.addWidget(self.wordcloudBtns, 2)
-        layout.addWidget(self.animationBtns, 3)
+        layout.addWidget(self.automationBtns, 3)
         layout.addWidget(self.liveBtns, 4)
         layout.addWidget(self.settingFolderBox, 5)
         layout.setStretch(0, 4)
@@ -1151,7 +1162,7 @@ class LeftWordcloudBtns(QtWidgets.QLabel):
             self.parentLyr.parentLyr.rightFuncBox.flipTabPage("blank")
             self.videoFlag = False
 
-class LeftAnimationBtns(QtWidgets.QLabel):
+class LeftautomationBtns(QtWidgets.QLabel):
     def __init__(self, _parent):
         super().__init__()
         self.childLyr = []
@@ -1168,7 +1179,7 @@ class LeftAnimationBtns(QtWidgets.QLabel):
         self.setLineWidth(1)
         # wordcloud note
         self.wordcloudNote = QtWidgets.QLabel(self)
-        self.wordcloudNote.setText("animation")
+        self.wordcloudNote.setText("automation")
         self.wordcloudNote.setFont(QtGui.QFont("Microsoft YaHei"))
         self.wordcloudNote.setGeometry(20, 0, 160, 30)
         self.wordcloudNote.setAlignment(QtCore.Qt.AlignCenter)
@@ -1203,7 +1214,7 @@ class LeftAnimationBtns(QtWidgets.QLabel):
         self.addTaskBtn.setIconSize(QtCore.QSize(20, 20))
         self.addTaskBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.addTaskBtn.setFlat(True)
-        self.addTaskBtn.clicked.connect(self.flipToGetAnimationInfo)
+        self.addTaskBtn.clicked.connect(self.flipToAutomation)
 
     '''def flipToAnimationPreview(self):
         if not self.taskFlag:
@@ -1222,7 +1233,7 @@ class LeftAnimationBtns(QtWidgets.QLabel):
         else:
             self.parentLyr.parentLyr.rightFuncBox.flipTabPage("blank")
             self.previewFlag = False'''
-    def flipToGetAnimationInfo(self):
+    def flipToAutomation(self):
         self.parentLyr.parentLyr.rightFuncBox.flipTabPage("animationinfocollect")
 
 class LeftLiveBtns(QtWidgets.QLabel):
