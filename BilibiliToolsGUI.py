@@ -802,14 +802,16 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.infoBox.clear()
 
 class RightAutomation(QtWidgets.QLabel):
-    infoSignal = QtCore.pyqtSignal(list)
+    infoSignal1 = QtCore.pyqtSignal(list)
+    infoSignal2 = QtCore.pyqtSignal(tuple)
     def __init__(self, _parent):
         super().__init__()
         self.childLyr = []
         self.parentLyr = _parent
         _parent.childLyr.append(self)
         self.initUI()
-        # self.infoSignal.connect(self.updateQuInfo)
+        self.infoSignal1.connect(self.updateQuInfo1)
+        self.infoSignal2.connect(self.updateQuInfo2)
 
     def initUI(self):
         self.setFrameShape(QtWidgets.QFrame.Box)
@@ -887,34 +889,35 @@ class RightAutomation(QtWidgets.QLabel):
 
         self.update()
         return obj'''
+
     def searchUPInfo(self):
         link = self.linkEdit.text()
         th = threading.Thread(target=self.infoThread, args=(link,))
         th.start()
-
     def infoThread(self, link):
-        # downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
         info_list = get_user_detail(link)
         video_list = get_up_video(link)
-        print("finished")
-        for index in range(len(info_list)):
+        self.infoSignal1.emit(info_list)
+        self.infoSignal2.emit(video_list)
+    def updateQuInfo1(self, info1):
+        self.infoBox.append(
+            "the aids of the UP's video are:///"
+        )
+        '''for index in range(len(info[0])):
             self.infoBox.append(
-                info_list[index], "green"
-            )
-        for index in range(len(video_list)):
+                info[0][index], "green"
+            )'''
+    def updateQuInfo2(self, info2):
+        self.infoBox.append(
+            "the aids of the UP's video are:"
+        )
+        info2 = list(info2)
+        info2 = info2[0]
+        info2_new = [str(x) for x in info2]
+        for index in range(len(info2_new)):
             self.infoBox.append(
-                "the aids of the UP's video are:" + info_list[index], "green"
+                info2_new[index]
             )
-            self.infoBox.append(
-                info_list[index], "green"
-            )
-
-
-        '''self.infoSignal.emit([info_list])
-    def updateQuInfo(self, info):
-        self.infoBox.append("UP's video Information\n")
-        self.infoBox.append("name: {}\nbvid: {}\n".format(
-            info[0]['title'], info[0]['bvid']))'''
 
     def dropCoin(self):
         link = self.linkEdit.text()
