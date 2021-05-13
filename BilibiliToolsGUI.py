@@ -801,25 +801,6 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.linkEdit.clear()
         self.infoBox.clear()
 
-'''class RightAnimationPreview(QtWidgets.QLabel):
-    def __init__(self, _parent):
-        super().__init__()
-        self.childLyr = []
-        self.parentLyr = _parent
-        _parent.childLyr.append(self)
-        self.initUI()
-    def initUI(self):
-        self.setFrameShape(QtWidgets.QFrame.Box)
-        self.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.setLineWidth(1)
-
-        # set layout
-        layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setStretch(0, 1)
-        self.setLayout(layout)'''
-
 class RightAutomation(QtWidgets.QLabel):
     infoSignal = QtCore.pyqtSignal(list)
     def __init__(self, _parent):
@@ -828,7 +809,7 @@ class RightAutomation(QtWidgets.QLabel):
         self.parentLyr = _parent
         _parent.childLyr.append(self)
         self.initUI()
-        #self.infoSignal.connect(self.updateQuInfo)
+        # self.infoSignal.connect(self.updateQuInfo)
 
     def initUI(self):
         self.setFrameShape(QtWidgets.QFrame.Box)
@@ -859,6 +840,11 @@ class RightAutomation(QtWidgets.QLabel):
         self.coinEdit.addAction(action, QLineEdit.TrailingPosition)
 
         # search
+        self.searchBtn = QtWidgets.QPushButton(self)
+        self.searchBtn.setGeometry(380, 50, 100, 30)
+        self.searchBtn.setText("search")
+        self.searchBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.searchBtn.clicked.connect(self.searchUPInfo)
 
         # info
         self.infoBox = QtWidgets.QTextBrowser(self)
@@ -901,6 +887,35 @@ class RightAutomation(QtWidgets.QLabel):
 
         self.update()
         return obj'''
+    def searchUPInfo(self):
+        link = self.linkEdit.text()
+        th = threading.Thread(target=self.infoThread, args=(link,))
+        th.start()
+
+    def infoThread(self, link):
+        # downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
+        info_list = get_user_detail(link)
+        video_list = get_up_video(link)
+        print("finished")
+        for index in range(len(info_list)):
+            self.infoBox.append(
+                info_list[index], "green"
+            )
+        for index in range(len(video_list)):
+            self.infoBox.append(
+                "the aids of the UP's video are:" + info_list[index], "green"
+            )
+            self.infoBox.append(
+                info_list[index], "green"
+            )
+
+
+        '''self.infoSignal.emit([info_list])
+    def updateQuInfo(self, info):
+        self.infoBox.append("UP's video Information\n")
+        self.infoBox.append("name: {}\nbvid: {}\n".format(
+            info[0]['title'], info[0]['bvid']))'''
+
     def dropCoin(self):
         link = self.linkEdit.text()
         link2 = int(self.coinEdit.text())
