@@ -802,7 +802,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.infoBox.clear()
 
 class RightAutomation(QtWidgets.QLabel):
-    infoSignal1 = QtCore.pyqtSignal(list)
+    infoSignal1 = QtCore.pyqtSignal(str)
     infoSignal2 = QtCore.pyqtSignal(tuple)
     def __init__(self, _parent):
         super().__init__()
@@ -895,18 +895,14 @@ class RightAutomation(QtWidgets.QLabel):
         th = threading.Thread(target=self.infoThread, args=(link,))
         th.start()
     def infoThread(self, link):
-        info_list = get_user_detail(link)
+        info = get_user_detail(link)
         video_list = get_up_video(link)
-        self.infoSignal1.emit(info_list)
+        self.infoSignal1.emit(info)
         self.infoSignal2.emit(video_list)
     def updateQuInfo1(self, info1):
         self.infoBox.append(
-            "the aids of the UP's video are:///"
+            info1
         )
-        '''for index in range(len(info[0])):
-            self.infoBox.append(
-                info[0][index], "green"
-            )'''
     def updateQuInfo2(self, info2):
         self.infoBox.append(
             "the aids of the UP's video are:"
@@ -914,10 +910,12 @@ class RightAutomation(QtWidgets.QLabel):
         info2 = list(info2)
         info2 = info2[0]
         info2_new = [str(x) for x in info2]
+        string = ""
         for index in range(len(info2_new)):
-            self.infoBox.append(
-                info2_new[index]
-            )
+            string = string + info2_new[index] + " "
+        self.infoBox.append(
+            string
+        )
 
     def dropCoin(self):
         link = self.linkEdit.text()
@@ -934,7 +932,10 @@ class RightAutomation(QtWidgets.QLabel):
         random_like_coin(t, link, link2)
         print("finished")
         self.parentLyr.rightLogBox.addLog(
-            "the video the you try to drop coin and share : "+ link, "green"
+            "you try to drop coin(s) to: " + link, "green"
+        )
+        self.parentLyr.rightLogBox.addLog(
+            "Video(s) from the UP " + link + " have(has) also been shared." , "green"
         )
         f.close
 
