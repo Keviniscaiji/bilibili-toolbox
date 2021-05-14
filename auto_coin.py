@@ -35,8 +35,10 @@ def get_user_detail(uid):  # need user to enter the ID of the video producer
     list.append(['He/She follows: %s people'%json_data['data']['following']])
     list.append(["There are %s people on his/her blacklist"%json_data['data']['black']])
     string = ""
-    for l in list:
-        string = string+l[0]+","
+    string = string + list[0][0] + ",\n"
+    string = string + list[1][0] + ",\n"
+    string = string + list[2][0] + ",\n"
+    string = string + list[3][0] + "."
     return string
 
 def get_up_video(UID):
