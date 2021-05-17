@@ -106,15 +106,15 @@ def random_like_coin(sess,uid,coins):
             print("the video the you try to drop coin and share : ")
             print(list_of_video[k])
             if retrun != '超过投币上限啦~':
-                i = i + 1
-            j = j + 1
+                j = j + 1
+            i = i + 1
             if j > 30:
                 print("maybe you have drop too many coins to his videos, change a user please")
                 return get_user_detail(uid)
             time.sleep(2)
-        else:
-            print("you do not have enough coin")
-            return get_user_detail(uid)
+    else:
+        print("you do not have enough coin")
+        return get_user_detail(uid)
     return get_user_detail(uid)
 
 def auto_Forwarding(sess,aid):
@@ -131,6 +131,6 @@ def auto_Forwarding(sess,aid):
     content = S.post(url, post_data)
     return json.loads(content.text)
 
-print(random_like_coin("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315",3301695,3))
+print(random_like_coin("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315",3301695,0))
 # print(auto_Forwarding("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315",374916041))
 # print(get_coin("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315"))
