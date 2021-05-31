@@ -1,7 +1,9 @@
+import os
 import requests
 import re
 import json
 import sys
+import time
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -10,7 +12,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 class Recording(object):
 
 
-    def __init__(self, up_id, size=10, filename='recording.flv',baseurl='https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid={}'):
+    def __init__(self, up_id, size=0, filename='recording',baseurl='https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid={}'):
         self.up_id = up_id
         self.size_all = size
         self.filename = filename
@@ -19,7 +21,7 @@ class Recording(object):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.18362'}
 
         self.baseurl = 'https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid={}'.format(up_id)
-        # response2 = requests.get(url=self.url, headers=self.headers)
+
 
 
     def getStream(self):
@@ -28,17 +30,17 @@ class Recording(object):
         self.headers['Host'] = 'api.live.bilibili.com'
         self.headers['Referer'] = self.Referer
         response = requests.get(url=url, headers=self.headers).json()
-        response2 = requests.get(url=url, headers=self.headers)
         room_id = response['data']['roomid']
 
         global anchor_status
         response2 = requests.get(url, headers=self.headers)
-        html = response2.content.decode()
+        html = response2.content.decode('utf-8')
         anchor_status = re.findall("轮播</span>", html)
         if anchor_status:
             print("尚未开播")
         else:
             print("正在直播")
+            print("开始录制")
 
         return room_id
 
@@ -63,12 +65,14 @@ class Recording(object):
         headers = self.headers
         headers['host'] = host
         headers['referer'] = self.Referer
+        filename = self.filename
 
+        root = "F:/Recording/"
 
         size = 0
         chunk_size = 1024
         response = requests.get(url, headers=headers, stream=True, verify=False)
-        with open(self.filename, 'wb') as file:
+        with open(root + filename, 'wb') as file:
             for data in response.iter_content(chunk_size=chunk_size):
                 file.write(data)
                 size += len(data)
@@ -79,15 +83,15 @@ class Recording(object):
                         break
                 else:
                     sys.stdout.write('  进度:%.2fMB' % float(size / 1024 / 1024) + '\r')
-        print('录制结束')
 
 
 if __name__ == '__main__':
     up_id = int(input("输入主播UID："))
-    # '2225281'
-    # '50329118'
     size_MB = 0
-    filename = 'recording.flv'
-    liveVideo = Recording(up_id=up_id,size=size_MB,filename=filename,baseurl='https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid={}')
-    liveVideo.getStream()
-    liveVideo.recording()
+    baseFilename = 'recording'
+    now_time = time.strftime("%Y%m%d%H%M%S")
+    while True:
+        filename = str(up_id)+'_'+now_time+'.mp4'
+        liveVideo = Recording(up_id=up_id, size=size_MB,filename=filename,baseurl='https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid={}')
+        liveVideo.recording()
+
