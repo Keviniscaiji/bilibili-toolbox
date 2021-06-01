@@ -1364,14 +1364,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
     '''def previewWC(self):
         signal = self.openSignal
         th = threading.Thread(traget=self.previewThread, args= (signal,))
-        th.start()
-    def previewThread(self, signal, link):
-        if signal == 1:
-            img = Image.open('./download/wordcloud/' + link + '_wc.png')
-            plt.figure("test")
-            plt.imshow(img)
-            plt.show()
-            signal = signal - 1'''
+        th.start()'''
 
     def createWordcloud(self):
         link = self.linkEdit.text()
