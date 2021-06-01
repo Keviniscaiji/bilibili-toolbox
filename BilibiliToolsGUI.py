@@ -1361,11 +1361,6 @@ class RightWordcloudCreate(QtWidgets.QLabel):
         self.infoBox.append("name: {}\nbvid: {}\n".format(
             info_dict['data']['title'], info_dict['data']['bvid']))
 
-    '''def previewWC(self):
-        signal = self.openSignal
-        th = threading.Thread(traget=self.previewThread, args= (signal,))
-        th.start()'''
-
     def createWordcloud(self):
         link = self.linkEdit.text()
         wdcloud = VideoCommentWordCloud(getHeaders(True), "./download/wordcloud", "./api.cfg")
