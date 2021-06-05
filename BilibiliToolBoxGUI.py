@@ -6,7 +6,6 @@ from bilibili.Downloader import *
 from bilibili.User import *
 from bilibili.auto_coin import *
 from bilibili.auto_sign import *
-from bilibili.Comment import *
 from bilibili.Recording import LiveRecording
 from bilibili.HotCommentWordCloud import VideoCommentWordCloud
 from bilibili.liveComment import bilibiliDanmu
@@ -2267,30 +2266,84 @@ class SettingWindow(QtWidgets.QWidget):
         self.setWindowTitle("Setting")
         self.setWindowIcon(QtGui.QIcon("./data/resource/c2a.png"))
         # automation label
-        
+        self.automationLabel = QtWidgets.QLabel(self)
+        self.automationLabel.setGeometry(20, 20, 300, 25)
+        self.automationLabel.setText("AUTOMATION")
+        self.automationLabel.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.automationLabel.setAlignment(QtCore.Qt.AlignCenter)
+        # auto coin drop number label
+        self.coinsEditNote = QtWidgets.QLabel(self)
+        self.coinsEditNote.setGeometry(20, 50, 120, 25)
+        self.coinsEditNote.setText("coins number")
+        self.coinsEditNote.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto coin drop number
-
+        self.coinEdit = QtWidgets.QLineEdit(self)
+        self.coinEdit.setGeometry(140, 50, 120, 25)
+        # auto coin drop uid label
+        self.uidEditNote = QtWidgets.QLabel(self)
+        self.uidEditNote.setGeometry(20, 80, 120, 25)
+        self.uidEditNote.setText("up's uid")
+        self.uidEditNote.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto coin drop uid
-
+        self.uidEdit = QtWidgets.QLineEdit(self)
+        self.uidEdit.setGeometry(140, 80, 120, 25)
+        # auto coin drop enable label
+        self.coinDropLabel = QtWidgets.QLabel(self)
+        self.coinDropLabel.setGeometry(20, 110, 120, 30)
+        self.coinDropLabel.setText("drop coin")
+        self.coinDropLabel.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto coin drop enable
-
+        self.coinDropBtn = QtWidgets.QPushButton(self)
+        self.coinDropBtn.setGeometry(140, 110, 120, 30)
+        self.coinDropBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.coinDropBtn.setText("enable")
+        # auto sign in enable label
+        self.liveSignInLabel = QtWidgets.QLabel(self)
+        self.liveSignInLabel.setGeometry(20, 150, 120, 30)
+        self.liveSignInLabel.setText("sign in")
+        self.liveSignInLabel.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto sign in enable
-
+        self.liveSignInBtn = QtWidgets.QPushButton(self)
+        self.liveSignInBtn.setGeometry(140, 150, 120, 30)
+        self.liveSignInBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.liveSignInBtn.setText("enable")
+        # Record Label
+        self.automationLabel = QtWidgets.QLabel(self)
+        self.automationLabel.setGeometry(20, 200, 300, 25)
+        self.automationLabel.setText("LIVE RECORD")
+        self.automationLabel.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.automationLabel.setAlignment(QtCore.Qt.AlignCenter)
         # player executable path lable
         self.playerExePathNote = QtWidgets.QLabel(self)
         self.playerExePathNote.setText("video player")
         self.playerExePathNote.setFont(QtGui.QFont("Microsoft YaHei"))
-        self.playerExePathNote.setGeometry(20, 370, 160, 30)
+        self.playerExePathNote.setGeometry(20, 220, 160, 30)
         # player executable path
         self.playerExePathEdit = QtWidgets.QLineEdit(self)
-        self.playerExePathEdit.setGeometry(20, 400, 200, 30)
+        self.playerExePathEdit.setGeometry(20, 250, 200, 30)
         self.playerExePathEdit.setFont(QtGui.QFont("Microsoft YaHei"))
         # player executable path btn
         self.playerExePathBtn = QtWidgets.QPushButton(self)
-        self.playerExePathBtn.setGeometry(230, 400, 80, 30)
+        self.playerExePathBtn.setGeometry(230, 250, 80, 30)
         self.playerExePathBtn.setText("open")
         self.playerExePathBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.playerExePathBtn.clicked.connect(self.openPlayerExePath)
+        # login label
+        self.automationLabel = QtWidgets.QLabel(self)
+        self.automationLabel.setGeometry(20, 300, 300, 25)
+        self.automationLabel.setText("LOGIN")
+        self.automationLabel.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.automationLabel.setAlignment(QtCore.Qt.AlignCenter)
+        # auto login
+        self.autoLoginLabel = QtWidgets.QLabel(self)
+        self.autoLoginLabel.setText("auto login")
+        self.autoLoginLabel.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.autoLoginLabel.setGeometry(20, 335, 120, 30)
+        # auto login btn
+        self.autoLoginBtn = QtWidgets.QPushButton(self)
+        self.autoLoginBtn.setGeometry(140, 335, 120, 30)
+        self.autoLoginBtn.setText("enable")
+        self.autoLoginBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         # apply
         self.applyBtn = QtWidgets.QPushButton(self)
         self.applyBtn.setGeometry(230, 440, 80, 30)

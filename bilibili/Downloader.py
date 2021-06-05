@@ -95,11 +95,7 @@ class CoverDownloader(BaseDownloader):
         urllib.request.install_opener(opener)
         urllib.request.urlretrieve(
             url=info_dict['pic'], 
-            filename=os.path.join(self.path, "{}_cover.png".format(info_dict['bvid'])),
-            reporthook=callback if callback is not None else \
-                lambda blocknum,blocksize,totalsize:self._progress(
-                blocknum,blocksize,totalsize,
-                'bit'))
+            filename=os.path.join(self.path, "{}_cover.png".format(info_dict['bvid'])))
 
 
 class VideoDownloader(BaseDownloader):
