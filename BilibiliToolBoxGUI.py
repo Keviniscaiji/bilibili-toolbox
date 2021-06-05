@@ -265,7 +265,7 @@ class LoginWindow(QtWidgets.QWidget):
         self.signal.connect(self.moveToMainWindow)
         self.signal2.connect(self.qrcodeTimeoutNotice)
         self.login()
-        self.show()
+        self.autoLogin()
 
     def initUI(self):
         self.setFixedSize(320, 400)
@@ -406,6 +406,17 @@ class LoginWindow(QtWidgets.QWidget):
 
     def qrcodeTimeoutNotice(self):
         self.loginNotice.setText("time exceed, please refresh")
+
+    def autoLogin(self):
+        with open('./data/user/config.json') as file_obj2:
+            cfg_ = json.load(file_obj2)
+        if "auto_login" in cfg_.keys():
+            if bool(cfg_["auto_login"]):
+                self.moveToMainWindow()
+            else:
+                self.show()
+        else:
+            self.show()
 # ------------------------------------------------------ #
 
 
@@ -2398,21 +2409,23 @@ class SettingWindow(QtWidgets.QWidget):
     def setDefault(self):
         config = setUserConfigDefault()
         self.setConfig(config)
+        find(RightLogBox, root).addLog("setting is set to default", "green")
 
     def applySetting(self):
         config['video_player'] = str(self.playerExePathEdit.text())
         config['coin_uid'] = str(self.uidEdit.text())
         config['coin_drop'] = str(self.coinEdit.text())
+        find(RightLogBox, root).addLog("new setting is applied", "green")
 
     def setConfig(self, config):
         self.coinEdit.setText(str(config['coin_drop']))
         self.uidEdit.setText(str(config['coin_uid']))
         if bool(config['auto_coin']):
-            self.enableAutoDropCoin()
+            self.coinDropBtn.setText("disable")
         if bool(config['auto_sign_in']):
-            self.enableAutoLiveSignIn
+            self.liveSignInBtn.setText("disable")
         if bool(config['auto_login']):
-            self.enableAutoLogin()
+            self.autoLoginBtn.setText("disable")
         self.playerExePathEdit.setText(config["video_player"])
 
     def closeEvent(self, event):
