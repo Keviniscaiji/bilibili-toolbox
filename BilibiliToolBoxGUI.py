@@ -1,7 +1,3 @@
-from typing import Any
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QLabel, QPushButton, QAction, QLineEdit, QFileDialog, QHBoxLayout, QDesktopWidget
-
 from bilibili.Downloader import *
 from bilibili.User import *
 from bilibili.auto_coin import *
@@ -9,7 +5,6 @@ from bilibili.auto_sign import *
 from bilibili.Recording import LiveRecording
 from bilibili.HotCommentWordCloud import VideoCommentWordCloud
 from bilibili.liveComment import bilibiliDanmu
-
 
 import os
 import sys
@@ -19,9 +14,7 @@ import time
 import ctypes
 import inspect
 import json
-from matplotlib import pyplot as plt
 from PIL import Image, ImageQt
-import matplotlib.image as mpimg
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 # ----------------------- UTILS ------------------------ #
@@ -219,7 +212,14 @@ def loadAllState():
     if config == {}:
         config = setUserConfigDefault()
     find(RightAutomation, root).setConfig(config)
+    if bool(config['auto_coin']):
+        find(SettingWindow, root).enableAutoDropCoin()
+    if bool(config['auto_sign_in']):
+        find(SettingWindow, root).enableAutoLiveSignIn()
+    if bool(config['auto_login']):
+        find(SettingWindow, root).enableAutoLogin()
     find(SettingWindow, root).playerExePathEdit.setText(config["video_player"])
+    find(SettingWindow, root).setConfig(config)
     # load automation_history 
     with open('./data/user/automation_history.json') as file_obj3:
         automation_history = list(json.load(file_obj3))
@@ -230,7 +230,7 @@ def loadAllState():
         find(RightAutomation, root).autoCoinDropAndSignIn()
     find(RightAutomation, root).setHistory(automation_history)
 
-def setUserConfig(key: str, value: Any):
+def setUserConfig(key: str, value):
     config[key] = value
 
 def setUserConfigDefault():
@@ -240,6 +240,7 @@ def setUserConfigDefault():
     config['auto_coin'] = True
     config['auto_sign_in'] = True
     config['video_player'] = ""
+    config['auto_login'] = False
     return config
 # ------------------------------------------------------ #
 
@@ -1314,9 +1315,9 @@ class RightWordcloudCreate(QtWidgets.QLabel):
                     padding:2px 4px; }''')
         self.linkEdit.setPlaceholderText('please enter bilibili video link')
         self.linkEdit.setFont(QtGui.QFont("Microsoft YaHei"))
-        action = QAction(self)
-        action.setIcon(QIcon('./data/resource/bk8.png'))
-        self.linkEdit.addAction(action, QLineEdit.TrailingPosition)
+        action = QtWidgets.QAction(self)
+        action.setIcon(QtGui.QIcon('./data/resource/bk8.png'))
+        self.linkEdit.addAction(action, QtWidgets.QLineEdit.TrailingPosition)
         # search
         self.searchBtn = QtWidgets.QPushButton(self)
         self.searchBtn.setGeometry(380, 25, 100, 30)
@@ -2279,6 +2280,7 @@ class SettingWindow(QtWidgets.QWidget):
         # auto coin drop number
         self.coinEdit = QtWidgets.QLineEdit(self)
         self.coinEdit.setGeometry(140, 50, 120, 25)
+        self.coinEdit.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto coin drop uid label
         self.uidEditNote = QtWidgets.QLabel(self)
         self.uidEditNote.setGeometry(20, 80, 120, 25)
@@ -2287,6 +2289,7 @@ class SettingWindow(QtWidgets.QWidget):
         # auto coin drop uid
         self.uidEdit = QtWidgets.QLineEdit(self)
         self.uidEdit.setGeometry(140, 80, 120, 25)
+        self.uidEdit.setFont(QtGui.QFont("Microsoft YaHei"))
         # auto coin drop enable label
         self.coinDropLabel = QtWidgets.QLabel(self)
         self.coinDropLabel.setGeometry(20, 110, 120, 30)
@@ -2297,6 +2300,7 @@ class SettingWindow(QtWidgets.QWidget):
         self.coinDropBtn.setGeometry(140, 110, 120, 30)
         self.coinDropBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.coinDropBtn.setText("enable")
+        self.coinDropBtn.clicked.connect(self.enableAutoDropCoin)
         # auto sign in enable label
         self.liveSignInLabel = QtWidgets.QLabel(self)
         self.liveSignInLabel.setGeometry(20, 150, 120, 30)
@@ -2307,6 +2311,7 @@ class SettingWindow(QtWidgets.QWidget):
         self.liveSignInBtn.setGeometry(140, 150, 120, 30)
         self.liveSignInBtn.setFont(QtGui.QFont("Microsoft YaHei"))
         self.liveSignInBtn.setText("enable")
+        self.liveSignInBtn.clicked.connect(self.enableAutoLiveSignIn)
         # Record Label
         self.automationLabel = QtWidgets.QLabel(self)
         self.automationLabel.setGeometry(20, 200, 300, 25)
@@ -2344,6 +2349,7 @@ class SettingWindow(QtWidgets.QWidget):
         self.autoLoginBtn.setGeometry(140, 335, 120, 30)
         self.autoLoginBtn.setText("enable")
         self.autoLoginBtn.setFont(QtGui.QFont("Microsoft YaHei"))
+        self.autoLoginBtn.clicked.connect(self.enableAutoLogin)
         # apply
         self.applyBtn = QtWidgets.QPushButton(self)
         self.applyBtn.setGeometry(230, 440, 80, 30)
@@ -2358,15 +2364,53 @@ class SettingWindow(QtWidgets.QWidget):
         self.defaultBtn.clicked.connect(self.setDefault)
 
     def openPlayerExePath(self):
-        player_path, _ = QFileDialog.getOpenFileName(self, 'select video player')
+        player_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'select video player')
         self.playerExePathEdit.setText(player_path)
         setUserConfig("video_player", player_path)
 
+    def enableAutoDropCoin(self):
+        if self.coinDropBtn.text() == "enable":
+            self.coinDropBtn.setText("disable")
+            config['auto_coin'] = True
+        else:
+            self.coinDropBtn.setText("enable")
+            config['auto_coin'] = False
+
+    def enableAutoLiveSignIn(self):
+        if self.liveSignInBtn.text() == "enable":
+            self.liveSignInBtn.setText("disable")
+            config['auto_sign_in'] = True
+        else:
+            self.liveSignInBtn.setText("enable")
+            config['auto_sign_in'] = False
+
+    def enableAutoLogin(self):
+        if self.autoLoginBtn.text() == "enable":
+            self.autoLoginBtn.setText("disable")
+            config['auto_login'] = True
+        else:
+            self.autoLoginBtn.setText("enable")
+            config['auto_login'] = False
+
     def setDefault(self):
-        pass
+        config = setUserConfigDefault()
+        self.setConfig(config)
 
     def applySetting(self):
         config['video_player'] = str(self.playerExePathEdit.text())
+        config['coin_uid'] = str(self.uidEdit.text())
+        config['coin_drop'] = str(self.coinEdit.text())
+
+    def setConfig(self, config):
+        self.coinEdit.setText(str(config['coin_drop']))
+        self.uidEdit.setText(str(config['coin_uid']))
+        if bool(config['auto_coin']):
+            self.enableAutoDropCoin()
+        if bool(config['auto_sign_in']):
+            self.enableAutoLiveSignIn
+        if bool(config['auto_login']):
+            self.enableAutoLogin()
+        self.playerExePathEdit.setText(config["video_player"])
 
     def closeEvent(self, event):
         event.accept()
