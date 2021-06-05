@@ -38,7 +38,8 @@ class LiveRecording(object):
                 size += len(data)
                 file.flush()
                 if callback is None:
-                    sys.stdout.write('  进度:%.2fMB' % float(size / 1024 / 1024) + '\r')
+                    # sys.stdout.write('  进度:%.2fMB' % float(size / 1024 / 1024) + '\r')
+                    pass
                 else:
                     callback(float(size / 1024 / 1024))
             if callback is not None:

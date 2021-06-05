@@ -51,5 +51,5 @@ if __name__ == "__main__":
 
     while True:
         bzhan.get_danmu()
-        time.sleep(24)
+        time.sleep(2)
     

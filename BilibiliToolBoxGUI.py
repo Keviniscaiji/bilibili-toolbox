@@ -1757,6 +1757,9 @@ class RightLiveBox(QtWidgets.QLabel):
                 finally:
                     self.commentTh = None
             self.recordBtn.setText("record")
+            self.parentLyr.rightLogBox.addLog(
+                "recording stopped", "green"
+            )
 
     def videoPlayerThread(self, name):
         time.sleep(2)
@@ -1777,7 +1780,7 @@ class RightLiveBox(QtWidgets.QLabel):
         liveComment = bilibiliDanmu(room_id)
         while True:
             liveComment.get_danmu(self.addCommentSignal)
-            time.sleep(24)
+            time.sleep(2)
 
     def clearAll(self):
         self.commentBox.clear()
