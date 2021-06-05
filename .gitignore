@@ -1,0 +1,8 @@
+# normal
+release
+.vscode
+
+# download
+download/image/*.png
+download/video/*.flv
+download/wordcloud/*.png
