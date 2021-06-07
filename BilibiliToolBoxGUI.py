@@ -16,6 +16,7 @@ import inspect
 import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 
+
 # ----------------------- UTILS ------------------------ #
 global root
 root = None
