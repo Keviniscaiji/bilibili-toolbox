@@ -14,7 +14,6 @@ import time
 import ctypes
 import inspect
 import json
-from PIL import Image, ImageQt
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 # ----------------------- UTILS ------------------------ #
@@ -147,9 +146,7 @@ class VideoInfoLabel(QtWidgets.QLabel):
         
     def updateVideoInfo(self, data):
         self.data = data
-        img = Image.open(data['path']).resize((127, 80))
-        img = ImageQt.toqpixmap(img)
-        self.coverLabel.setPixmap(img)
+        self.coverLabel.setPixmap(QtGui.QPixmap(data['path']).scaled(127, 80))
         self.bvidLabel.setText("BVID: %s"%data['bvid'])
         self.titleLabel.setText(data['title'])
     
@@ -336,9 +333,8 @@ class LoginWindow(QtWidgets.QWidget):
     def getLoginQRcode(self):
         headers = getHeaders()
         login_obj = LoginApp(headers, "./cookie.txt", "./api.cfg")
-        img, qrcode_dict = login_obj.get_login_qrcode()
-        img = ImageQt.toqpixmap(img)
-        self.qrCodeImage.setPixmap(img)
+        qrcode_dict = login_obj.get_login_qrcode("./data/cache")
+        self.qrCodeImage.setPixmap(QtGui.QPixmap("./data/cache/qrcode.jpg"))
         return login_obj, qrcode_dict
         
     def checkLogin(self, login_obj, qrcode_dict):
@@ -380,11 +376,10 @@ class LoginWindow(QtWidgets.QWidget):
 
     def loginWithCacheCookie(self):
         if os.path.exists('./data/user/head.jpg'):
-            img = Image.open('./data/user/head.jpg').resize((200, 200))
+            path = './data/user/head.jpg'
         else:
-            img = Image.open('./data/resource/login.png').resize((200, 200))
-        img = ImageQt.toqpixmap(img)
-        self.qrCodeImage.setPixmap(img)
+            path = './data/resource/login.png'
+        self.qrCodeImage.setPixmap(QtGui.QPixmap(path).scaled(200, 200))
         self.loginNotice.setText("Cookie found, please login")
         self.skipBtn.setText("login")
 
@@ -1023,9 +1018,7 @@ class SingleDownloadBox(QtWidgets.QLabel):
         # title icon
         self.titleIcon = QtWidgets.QLabel(self)
         self.titleIcon.setGeometry(2, 20, 20, 20)
-        img = Image.open('./data/resource/name.png').resize((15, 15))
-        img = ImageQt.toqpixmap(img)
-        self.titleIcon.setPixmap(img)
+        self.titleIcon.setPixmap(QtGui.QPixmap('./data/resource/name.png').scaled(15, 15))
         # title
         self.titleLable = ScrollTextLabel(self)
         self.titleLable.setGeometry(25, 25, 350, 20)
@@ -1065,11 +1058,10 @@ class SingleDownloadBox(QtWidgets.QLabel):
         self.info_dict = info_dict
         # set filetype icon 
         if self.info_dict['d_type'] == 'video':
-            img = Image.open('./data/resource/video.png').resize((20, 20))
+            path = './data/resource/video.png'
         else:
-            img = Image.open('./data/resource/cover.png').resize((20, 20))
-        img = ImageQt.toqpixmap(img)
-        self.fileTypeIcon.setPixmap(img)
+            path = './data/resource/cover.png'
+        self.fileTypeIcon.setPixmap(QtGui.QPixmap(path).scaled(20, 20))
         # set title and filename
         if info_dict['d_type'] == "video":
             self.fileNameLable.setText("{}_{}_video.flv".format(
@@ -1238,11 +1230,10 @@ class SingleHistoryBox(QtWidgets.QLabel):
         self.fileTypeIcon = QtWidgets.QLabel(self)
         self.fileTypeIcon.setGeometry(0, 0, 20, 20)
         if self.history['type'] == 'video':
-            img = Image.open('./data/resource/video.png').resize((20, 20))
+            path = './data/resource/video.png'
         else:
-            img = Image.open('./data/resource/cover.png').resize((20, 20))
-        img = ImageQt.toqpixmap(img)
-        self.fileTypeIcon.setPixmap(img)
+            path = './data/resource/cover.png'
+        self.fileTypeIcon.setPixmap(QtGui.QPixmap(path).scaled(20, 20))
         # filename
         self.fileNameTimeLable = QtWidgets.QLabel(self)
         self.fileNameTimeLable.setGeometry(25, 0, 220, 20)
@@ -1251,9 +1242,7 @@ class SingleHistoryBox(QtWidgets.QLabel):
         # title icon
         self.titleIcon = QtWidgets.QLabel(self)
         self.titleIcon.setGeometry(2, 20, 20, 20)
-        img = Image.open('./data/resource/name.png').resize((15, 15))
-        img = ImageQt.toqpixmap(img)
-        self.titleIcon.setPixmap(img)
+        self.titleIcon.setPixmap(QtGui.QPixmap('./data/resource/name.png').scaled(15, 15))
         # title
         self.titleLable = ScrollTextLabel(self)
         self.titleLable.setGeometry(25, 25, 350, 20)
@@ -1263,13 +1252,12 @@ class SingleHistoryBox(QtWidgets.QLabel):
         self.statusIcon = QtWidgets.QLabel(self)
         self.statusIcon.setGeometry(240, 0, 20, 20)
         if self.history['status'] == 'finished':
-            img = Image.open('./data/resource/finished.png').resize((15, 15))
+            path = './data/resource/finished.png'
         elif self.history['status'] == 'canceled':
-            img = Image.open('./data/resource/canceled.png').resize((15, 15))
+            path = './data/resource/canceled.png'
         else:
-            img = Image.open('./data/resource/error.png').resize((15, 15))
-        img = ImageQt.toqpixmap(img)
-        self.statusIcon.setPixmap(img)
+            path = './data/resource/error.png'
+        self.statusIcon.setPixmap(QtGui.QPixmap(path).scaled(15, 15))
         # status
         self.statusLabel = QtWidgets.QLabel(self)
         self.statusLabel.setGeometry(265, 0, 100, 20)
@@ -1278,9 +1266,7 @@ class SingleHistoryBox(QtWidgets.QLabel):
         # time icon
         self.timeIcon = QtWidgets.QLabel(self)
         self.timeIcon.setGeometry(2, 40, 20, 20)
-        img = Image.open('./data/resource/time.png').resize((15, 15))
-        img = ImageQt.toqpixmap(img)
-        self.timeIcon.setPixmap(img)
+        self.timeIcon.setPixmap(QtGui.QPixmap('./data/resource/time.png').scaled(15, 15))
         # time
         self.timeLable = QtWidgets.QLabel(self)
         self.timeLable.setGeometry(25, 40, 200, 20)
@@ -1372,9 +1358,7 @@ class RightWordcloudCreate(QtWidgets.QLabel):
     def wordcloudPreview(self, signal):
         if signal:
             path = "./download/wordcloud/" + self.infoBox.data['bvid'] + "_wc.png"
-            img = Image.open(path).resize((300, 150))
-            img = ImageQt.toqpixmap(img)
-            self.imgPreview.setPixmap(img)
+            self.imgPreview.setPixmap(QtGui.QPixmap(path).scaled(300, 150))
 
     def searchVideoInfo(self):
         self.infoBox.getVideoInfo(self.linkEdit.text())
@@ -1889,11 +1873,9 @@ class UserInfoBox(QtWidgets.QLabel):
         self.setFrameShadow(QtWidgets.QFrame.Raised)
         self.setLineWidth(1)
         # User Head Image
-        img = Image.open(self.user_info['head']).resize((64, 64))
-        img = ImageQt.toqpixmap(img)
         self.userHeadImg = QtWidgets.QLabel(self)
         self.userHeadImg.setGeometry(8, 8, 64, 64)
-        self.userHeadImg.setPixmap(img)
+        self.userHeadImg.setPixmap(QtGui.QPixmap(self.user_info['head']).scaled(64, 64))
         # User Name
         # bug: User Name may be too long!!!  
         self.userName = QtWidgets.QLabel(self)

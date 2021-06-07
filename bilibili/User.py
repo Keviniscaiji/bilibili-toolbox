@@ -1,5 +1,6 @@
 import time
 import json
+import os
 import configparser
 import requests
 import qrcode
@@ -14,7 +15,7 @@ class LoginApp(object):
         self.parser.read(api_path)
         self.headers = headers
 
-    def get_login_qrcode(self) -> (Image.Image, dict):
+    def get_login_qrcode(self, path):
         get_url = self.parser.get("user", "LOGIN_r_API")
         qrcode_dict = requests.get(url=get_url, headers=self.headers).json()
         qr = qrcode.QRCode(
@@ -26,7 +27,8 @@ class LoginApp(object):
         qr.add_data(qrcode_dict['data']['url'])
         qr.make(fit=True)
         img = qr.make_image()
-        return img, qrcode_dict
+        img.save(os.path.join(path, "qrcode.jpg"))
+        return qrcode_dict
 
     def login(self, qrcode_dict: dict, t_slp=30) -> int:
         post_url = self.parser.get("user", "LOGIN_s_API")
