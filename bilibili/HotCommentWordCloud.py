@@ -10,9 +10,7 @@ import jieba
 import imageio
 import wordcloud
 import os
-from PIL import Image
 import configparser
-from matplotlib import pyplot as plt
 
 __all__ = ["VideoCommentWordCloud"]
 
@@ -24,11 +22,11 @@ class VideoCommentWordCloud(object):
         self.path = path
         self.mask_path = None
         self.font_path = None
-    
+
     def get_video_aid(self, bvid):
         url = str(self.parser.get("video", "INFO_API"))
         param = {
-            'bvid':'%s'%bvid
+            'bvid': '%s' % bvid
         }
         res = requests.get(url, params=param, headers=self.headers)
         json_data = json.loads(res.text)
@@ -39,12 +37,12 @@ class VideoCommentWordCloud(object):
         x = 1
         i = 1
         data = []
-        while(x<10):
+        while (x < 10):
             url = str(self.parser.get("video", "COMMENT_API"))
             param = {
-                'type':1,
-                'pn':str(x),
-                'oid':str(aid)
+                'type': 1,
+                'pn': str(x),
+                'oid': str(aid)
             }
             res = requests.get(url, params=param, headers=self.headers)
             json_data = json.loads(res.text)
@@ -75,14 +73,17 @@ class VideoCommentWordCloud(object):
             for i in l:
                 if len(i) >= 2:
                     cloudtext.append(i)
-        s = " ".join(cloudtext)
-        if self.mask_path is None:
-            wc = wordcloud.WordCloud(font_path=self.font_path, max_font_size=50)
+        if len(cloudtext) > 200:
+            s = " ".join(cloudtext)
+            if self.mask_path is None:
+                wc = wordcloud.WordCloud(font_path=self.font_path, max_font_size=50)
+            else:
+                color_mask = imageio.imread(self.mask_path)
+                wc = wordcloud.WordCloud(max_font_size=50, mask=color_mask)
+            pic = wc.generate(s)
+            wc.to_file(os.path.join(self.path, "{}_wc.png".format(bvid)))
         else:
-            color_mask = imageio.imread(self.mask_path)
-            wc = wordcloud.WordCloud(max_font_size=50, mask=color_mask)
-        pic = wc.generate(s)
-        wc.to_file(os.path.join(self.path, "{}_wc.png".format(bvid)))
+            print("There are too few bullet screens. Please choose a video with more bullet screens")
 
     def set_mask_path(self, path):
         self.mask_path = path
@@ -90,11 +91,12 @@ class VideoCommentWordCloud(object):
     def set_font_path(self, path):
         self.font_path = path
 
+
 if __name__ == "__main__":
     headers = {
-        'Referer':'https://www.bilibili.com/',
-        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-        'cookie':"",
+        'Referer': 'https://www.bilibili.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
+        'cookie': "",
     }
     videoCommentWordCloud = VideoCommentWordCloud(headers, "./", "../api.cfg")
     videoCommentWordCloud.set_font_path('../simhei.ttf')

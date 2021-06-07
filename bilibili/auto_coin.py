@@ -15,7 +15,7 @@ headers = {
 }
 
 def get_coin(sess):
-    se,cs,duid = handle_info(sess);
+    se,cs,duid = handle_info(sess)
     mycookies = {"SESSDATA":se,"bili_jct":cs,"DedeUserID": duid}
     S = requests.Session()
     requests.utils.add_dict_to_cookiejar(S.cookies, mycookies)
@@ -66,7 +66,7 @@ def handle_info(sess):
     i = 0
     while i < len(list):
         if list[i] == "SESSDATA":
-            se = list[i + 1];
+            se = list[i + 1]
         if list[i] == "bili_jct":
             cs = list[i + 1]
         if list[i] == "DedeUserID":
@@ -76,7 +76,7 @@ def handle_info(sess):
 # this method is used to process the cookie information, for the bilibili, we need
 # some specific string in order the proform the function
 def auto_coin_like(sess, aid) :
-    se,cs,duid = handle_info(sess);
+    se,cs,duid = handle_info(sess)
     mycookies = {"SESSDATA":se,"bili_jct":cs,"DedeUserID": duid}
     S = requests.Session()
     requests.utils.add_dict_to_cookiejar(S.cookies, mycookies)
@@ -93,6 +93,7 @@ def auto_coin_like(sess, aid) :
     content = S.post(url, post_data)
     text = json.loads(content.text)
     return text["message"]
+
 #  this method is used to put the coin and like the video
 
 def random_like_coin(sess, uid, coins):
@@ -104,42 +105,42 @@ def random_like_coin(sess, uid, coins):
     # try:
     while n < coins:
         k = random.randint(0, x - 1)
-        print("the video the you try to share : ")
-        print(list_of_video[k])
+        # print("the video the you try to share : ")
+        # print(list_of_video[k])
         if auto_Forwarding(sess, list_of_video[k]) == "重复分享":
-            print("the video have been shared")
+            # print("the video have been shared")
             u = u + 1
         else:
-            print("successfully shared, The added experience will be displayed after a period of time")
+            # print("successfully shared, The added experience will be displayed after a period of time")
             n = n + 1
         if u > 20:
-            print("most of his video have shared, change a user please")
+            # print("most of his video have shared, change a user please")
             break
-    print("you now have " + str(get_coin(sess))+ " coins")
+    # print("you now have " + str(get_coin(sess))+ " coins")
     if get_coin(sess) >= coins:
         while i < coins:
             k = random.randint(0, x-1)
             retrun =""
-            # retrun = auto_coin_like(sess,list_of_video[k])
+            retrun = auto_coin_like(sess,list_of_video[k])
             time.sleep(2)
 
-            print("the video the you try to drop coin : ")
-            print(list_of_video[k])
-            print(retrun)
+            # print("the video the you try to drop coin : ")
+            # print(list_of_video[k])
             if retrun == '超过投币上限啦~':
                 j = j + 1
-                print("you already like and drop coin to this video")
+                # print("you already like and drop coin to this video")
                 # if most of the video that the author post in recent are put coin in the system will
                 # ask you to the change a author.
             else:
                 i = i + 1
-                print("successful drop coin")
-            if j > 30:
-                print("maybe you have drop too many coins to his/her videos, change a user please")
+                # print("successful drop coin")
+                # print(retrun)
+            if j > 5:
+                # print("maybe you have drop too many coins to his/her videos, change a user please")
                 return get_user_detail(uid)
             time.sleep(2)
     else:
-        print("You do not have enough coin")
+        # print("You do not have enough coin")
         return get_user_detail(uid)
     return get_user_detail(uid)
     # except:
@@ -160,6 +161,3 @@ def auto_Forwarding(sess,aid):
     # print(json.loads(content.text))
     s = json.loads(content.text)
     return s["message"]
-print(random_like_coin("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315",3301695,1))
-# print(auto_Forwarding("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315",374916041))
-# print(get_coin("_uuid=33983BE8-3B5E-31DE-84A9-82D37E22D32608283infoc; buvid3=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; fingerprint3=bebaf37e711128ee5f5512f79e445037; buvid_fp=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; CURRENT_FNVAL=80; SESSDATA=b2ed4dde,1631859958,5851d*31; bili_jct=352c7187c835e066bb4ba78c929f6b47; DedeUserID=10548896; DedeUserID__ckMd5=d323e304c5795812; sid=6ewg8zhf; buvid_fp_plain=B337C198-9EB0-4174-A981-14D455D2A338184997infoc; blackside_state=1; rpdid=|(k|mJmYJ~|l0J'uYuYJuY~uJ; LIVE_BUVID=AUTO8516193485120705; fingerprint=b941082b09b290aea778334025424485; fingerprint_s=7de1a2a0858ae1bac94c76bd7e88e8aa; PVID=3; bfe_id=1e33d9ad1cb29251013800c68af42315"))

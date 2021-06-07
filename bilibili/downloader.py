@@ -5,7 +5,6 @@ import urllib
 import sys
 import time
 import math
-from prettytable import PrettyTable
 from bs4 import BeautifulSoup
 import json
 
@@ -19,7 +18,6 @@ class BaseDownloader(object):
         self.parser.read(api_path)
         self.headers = headers
         self.path = path
-        self.info_key = ['title', 'bvid', 'aid', 'cid', 'pic']
 
     def get_video_info(self, link=None, bvid=None) -> dict:
         # link: str, bvid: str
@@ -32,8 +30,7 @@ class BaseDownloader(object):
         param = {
             'bvid':'%s'%bvid
         }
-        infos = requests.get(url=url, params=param, headers=self.headers).json()
-        info_dict = {key: infos['data'][key] for key in self.info_key}
+        info_dict = requests.get(url=url, params=param, headers=self.headers).json()
         return info_dict
 
     def update_headers(self, headers: dict):
@@ -53,6 +50,40 @@ class BaseDownloader(object):
                 " {}/{} ({})".format(blocknum*blocksize, totalsize, units) + '\r')
         sys.stdout.flush()
 
+    def download_with_resume(self, url:str, path:str, file_name:str, 
+                            callback=None, chunk_size=1024) -> int:
+        file_path = os.path.join(path, file_name)
+        # get the total file size
+        response = requests.get(url, stream=True, headers=self.headers) 
+        file_size = int(response.headers['Content-Length']) 
+        # resume or from the begining
+        if os.path.exists(file_path):
+            first_byte = os.path.getsize(file_path)  
+            block_index = math.ceil(first_byte/chunk_size)
+        else:
+            first_byte = 0
+            block_index = 0
+        # if download complete, finished
+        if first_byte >= file_size: 
+            return 0
+        # get the download stream
+        headers = self.headers
+        headers["Range"] = f"bytes={first_byte}-{file_size}"
+        req = requests.get(url, headers=headers, stream=True)  
+        # callback function
+        callback = callback if callback is not None else \
+                lambda blocknum,blocksize,totalsize:self._progress(
+                blocknum,blocksize,totalsize,
+                'bit')
+        # start to download
+        with open(file_path, 'ab') as f:
+            for chunk in req.iter_content(chunk_size=chunk_size):  
+                if chunk:
+                    f.write(chunk)
+                    block_index += 1
+                    callback(block_index, chunk_size, file_size)
+        return 0
+        
 
 class CoverDownloader(BaseDownloader):
     def __init__(self, headers: dict, path: str, api_path='./api.cfg'):
@@ -64,11 +95,7 @@ class CoverDownloader(BaseDownloader):
         urllib.request.install_opener(opener)
         urllib.request.urlretrieve(
             url=info_dict['pic'], 
-            filename=os.path.join(self.path, "{}_cover.png".format(info_dict['bvid'])),
-            reporthook=callback if callback is not None else \
-                lambda blocknum,blocksize,totalsize:self._progress(
-                blocknum,blocksize,totalsize,
-                'bit'))
+            filename=os.path.join(self.path, "{}_cover.png".format(info_dict['bvid'])))
 
 
 class VideoDownloader(BaseDownloader):
@@ -77,8 +104,8 @@ class VideoDownloader(BaseDownloader):
 
     def get_supported_quality(self, info_dict: str) -> list:
         # return [description, quality_param, video_format]
-        text = self.get_video_link(info_dict, "")
-        qualities = text['data']['support_formats']
+        link_datas = self.get_video_link(info_dict, "")
+        qualities = link_datas[0]['data']['support_formats']
         qu = []
         for quality in qualities:
             qu.append([
@@ -88,40 +115,73 @@ class VideoDownloader(BaseDownloader):
             ])
         return qu
 
-    def get_video_link(self, info_dict: dict, quality_param: str) -> dict:
+    def get_video_link(self, info_dict: dict, quality_param: str, piece_idx=0, t_slp=0.01) -> dict:
         url = str(self.parser.get("video", "FLV_API"))
         # fourk = 1 --> enable 4k video stream
+        link_datas = []
         param = {
-            'cid':'%s'%info_dict['cid'],
-            'bvid':'%s'%info_dict['bvid'],
-            'qn':'%s'%quality_param,
-            'fourk': 1
+                    'cid':'',
+                    'bvid':'%s'%info_dict['data']['bvid'],
+                    'qn':'%s'%quality_param,
+                    'fourk': 1
         }
-        link_data = requests.get(url, params=param, headers=self.headers).json()
-        return link_data
+        if piece_idx == -1:
+            for item in info_dict['data']['pages']:
+                param['cid'] = item['cid']
+                link_data = requests.get(url, params=param, headers=self.headers).json()
+                link_datas.append(link_data)
+                time.sleep(t_slp)
+        else:
+            param['cid'] = info_dict['data']['pages'][piece_idx]['cid']
+            link_data = requests.get(url, params=param, headers=self.headers).json()
+            link_datas.append(link_data)
+        return link_datas
 
-    def print_qu_table(self, qualities: list):
-        print("Supported Qualities:")
-        table = PrettyTable()
-        table.field_names = ["Index", "Description", "Quality Param", "Video Format"]
-        for i, quality in enumerate(qualities):
-            table.add_row([str(i), quality[0], quality[1], quality[2]])
-        print(table)
-        print("\n")
+    def operate_download_cache(self, bvid=None, quality_param=None, 
+                                piece_idx=None, title=None, mode='n'):
+        # mode:
+        # n -> new cache; rm -> remove cache; r -> read cache
+        if mode == 'n':
+            cache_f = open(os.path.join(
+                self.path, 
+                "{}_{}_video.cache".format(bvid, piece_idx)),
+                'w')
+            cache_f.write(bvid+"\n")
+            cache_f.write(str(quality_param)+"\n")
+            cache_f.write(str(piece_idx)+"\n")
+            cache_f.write(str(title)+"\n")
+            cache_f.close()
+            return 0
+        elif mode == "rm":
+            os.remove(os.path.join(
+                self.path, 
+                "{}_{}_video.cache".format(bvid, piece_idx)))
+            return 0
+        elif mode == 'r':
+            cache_f = open(os.path.join(
+                self.path, 
+                "{}_{}_video.cache".format(bvid, piece_idx)),
+                'r')
+            lines = [line.strip('\n') for line in cache_f.readlines()]
+            cache = {}
+            cache['bvid'] = lines[0]
+            cache['qu'] = int(lines[1])
+            cache['piece_idx'] = int(lines[2])
+            cache['title'] = str(lines[3])
+            cache_f.close()
+            return cache
+        else:
+            return -1
 
-    def download_Video(self, info_dict: str, quality_param: str, callback=None):
-        link_data = self.get_video_link(info_dict, quality_param)
-        flv_url = link_data['data']['durl'][0]['url']
-        opener = urllib.request.build_opener()
-        opener.addheaders = [item for item in self.headers.items()]
-        urllib.request.install_opener(opener)
-        urllib.request.urlretrieve(
-            url=flv_url, 
-            filename=os.path.join(self.path, "{}_video.flv".format(info_dict['bvid'])),
-            reporthook= callback if callback is not None else \
-                lambda blocknum,blocksize,totalsize:self._progress(
-                blocknum,blocksize,totalsize,
-                'bit'))
+    def download(self, info_dict: str, quality_param: str, piece_idx=0, callback=None):
+        link_data = self.get_video_link(info_dict, quality_param, piece_idx)
+        flv_url = link_data[0]['data']['durl'][0]['url']
+        status = self.download_with_resume(
+            flv_url, 
+            self.path, 
+            "{}_{}_video.flv".format(info_dict['data']['bvid'], piece_idx+1),
+            callback)
+        return status
 
 
 class BulletScreenDownloader(BaseDownloader):
@@ -219,63 +279,5 @@ class CommentDownloader(BaseDownloader):
         f.close() 
 
 
-if __name__ == "__main__":
-    headers = {
-        'Referer':'https://www.bilibili.com/',
-        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-        'cookie':"_uuid=0A90EC93-44D6-40C5-2749-401C3210B3B483136infoc; buvid3=F7709BFF-B2B3-4848-852B-7B32D9281DC9184992infoc; sid=ig5gtah2; buvid_fp=F7709BFF-B2B3-4848-852B-7B32D9281DC9184992infoc; CURRENT_FNVAL=80; blackside_state=1; rpdid=|(u)~lR~YYmm0J'uYuYukYkJl; bp_t_offset_401883935=505658177784576438; finger=158939783; bp_video_offset_401883935=506852827230355536; fingerprint3=7ec25fd4a5ca2dda017c8248b8a316ba; fingerprint_s=e9095f132ef64672259e824eab5416de; PVID=1; bsource=search_baidu; fingerprint=de20d9205bb95b934d77a12457f3ea59; buvid_fp_plain=4B279B0E-6EC7-48FB-9C36-5F4698B7278058503infoc; DedeUserID=401883935; DedeUserID__ckMd5=ba4ce3ef45bf8016; SESSDATA=14b5ad2e,1632463963,4e897*31; bili_jct=4254bd21824f5cbf8279473ddfe6820d",
-    }
-    link = "https://www.bilibili.com/video/BV1BK411c7VC"
-    path = "./output"
 
-
-    # ----------------- test VideoDownloader ---------------- #
-    downloader = VideoDownloader(headers, path)
-    info_dict = downloader.get_video_info(link=link)
-    print("Video Name: {}".format(info_dict['title']))
-    print("Video bvid: {}\n".format(info_dict['bvid']))
-
-    qualities = downloader.get_supported_quality(info_dict)
-    downloader.print_qu_table(qualities)
-
-    user_qu = input("Download Quality_Param: ")
-    downloader.download_Video(info_dict, user_qu)
-    del downloader
-    print("Download complete")
-    # ------------------------------------------------------- #
-
-
-    # ----------------- test CoverDownloader ---------------- #
-    """ downloader = CoverDownloader(headers, path)
-    info_dict = downloader.get_video_info(link=link)
-    print("Video Name: {}".format(info_dict['title']))
-    print("Video bvid: {}\n".format(info_dict['bvid']))
-
-    downloader.download_cover(info_dict)
-    print("Download complete") """
-    # ------------------------------------------------------- #
-
-
-    # ------------ test BulletScreenDownloader -------------- #
-    """ downloader = BulletScreenDownloader(headers, path)
-    info_dict = downloader.get_video_info(link=link)
-    print("Video Name: {}".format(info_dict['title']))
-    print("Video bvid: {}\n".format(info_dict['bvid']))
-
-    bullet_screen = downloader.download_BulletScreen(info_dict)
-    downloader.write_csv(info_dict, bullet_screen)
-    print("Download complete") """
-    # ------------------------------------------------------- #
-
-
-    #------------------ test CommentDownloader ---------------#
-    """ downloader = CommentDownloader(headers, path)
-    info_dict = downloader.get_video_info(link=link)
-    print("Video Name: {}".format(info_dict['title']))
-    print("Video bvid: {}\n".format(info_dict['bvid']))
-
-    comments = downloader.download_Comment(info_dict, page=-1)
-    downloader.write_csv(info_dict, comments)
-    print("Download complete") """
-    # ------------------------------------------------------- #
     
