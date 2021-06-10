@@ -4,7 +4,8 @@ cd ..\
 md .\release
 
 :: Requirements:
-:: 1. python 3.8.10(with pip) should be installed at folder python3.8.10
+:: 1. python 3.8.10 (with pip) should be installed at folder python3.8.10,
+::    please read the project README for details. 
 :: 2. Files should be intact
 
 :: 1. Install Packages
@@ -15,15 +16,17 @@ md .\release
 .\python3.8.10\Scripts\pyinstaller.exe -i .\icon.ico -w .\BilibiliToolBoxGUI.py
 md .\dist\BilibiliToolBoxGUI\data
 md .\dist\BilibiliToolBoxGUI\download
-copy .\data .\dist\BilibiliToolBoxGUI\data
-copy .\download .\dist\BilibiliToolBoxGUI\download
-copy .\cookie.txt .\dist\BilibiliToolBoxGUI\cookie.txt
-copy .\api.cfg .\dist\BilibiliToolBoxGUI\api.cfg
+xcopy .\data .\dist\BilibiliToolBoxGUI\data /E/H/C/I
+xcopy .\download .\dist\BilibiliToolBoxGUI\download /E/H/C/I
+copy .\cookie.txt .\dist\BilibiliToolBoxGUI\cookie.txt /y
+copy .\api.cfg .\dist\BilibiliToolBoxGUI\api.cfg /y
+copy .\python3.8.10\Lib\site-packages\wordcloud\stopwords .\dist\BilibiliToolBoxGUI\wordcloud\stopwords /y
 
 :: 3. Clear Environment
 md .\release\BilibiliToolBoxGUI
-copy .\dist\BilibiliToolBoxGUI .\release\BilibiliToolBoxGUI
-del .\dist
-del .\build
+xcopy .\dist\BilibiliToolBoxGUI .\release\BilibiliToolBoxGUI /E/H/C/I
+rmdir /s/q .\dist
+rmdir /s/q .\build
+rmdir /s/q .\__pycache__
 del .\BilibiliToolBoxGUI.spec
 Echo "---------------------finished-----------------------"
