@@ -299,37 +299,40 @@ class LoginWindow(QtWidgets.QWidget):
             stop_thread(self.th)
         except:
             pass
-        self.qrcodeTimeout = False
-        headers = getHeaders(True)
-        user = BilibiliUser(headers, "./api.cfg")
-        info = user.get_account_info()
-        if info is not None:
-            self.emptyCookie = False
-            urllib.request.urlretrieve(
-                url=info['face'], 
-                filename="./data/user/head.jpg")
-            user_info = {
-                "name": info['name'],
-                "uid": str(info['mid']),
-                "gender": info['sex'],
-                "level": str(info['level']),
-                "head": "./data/user/head.jpg"
-            }
-            self.qrCodeImage.setPixmap(QtGui.QPixmap("./data/resource/successful.png"))
-            self.loginNotice.setText("Login successful ... ")
-            QtWidgets.QApplication.processEvents()
-            time.sleep(1.5)
-        else:
-            user_info = {
-                "name": 'Guest',
-                "uid": 'NONE',
-                "gender": '男',
-                "level": '0',
-                "head": "./data/resource/login.png"
-            }
-        self.mainWindow = MainWindow(user_info, self)
-        self.mainWindow.show()
-        self.setVisible(False)
+        try:
+            self.qrcodeTimeout = False
+            headers = getHeaders(True)
+            user = BilibiliUser(headers, "./api.cfg")
+            info = user.get_account_info()
+            if info is not None:
+                self.emptyCookie = False
+                urllib.request.urlretrieve(
+                    url=info['face'], 
+                    filename="./data/user/head.jpg")
+                user_info = {
+                    "name": info['name'],
+                    "uid": str(info['mid']),
+                    "gender": info['sex'],
+                    "level": str(info['level']),
+                    "head": "./data/user/head.jpg"
+                }
+                self.qrCodeImage.setPixmap(QtGui.QPixmap("./data/resource/successful.png"))
+                self.loginNotice.setText("Login successful ... ")
+                QtWidgets.QApplication.processEvents()
+                time.sleep(1.5)
+            else:
+                user_info = {
+                    "name": 'Guest',
+                    "uid": 'NONE',
+                    "gender": '男',
+                    "level": '0',
+                    "head": "./data/resource/login.png"
+                }
+            self.mainWindow = MainWindow(user_info, self)
+            self.mainWindow.show()
+            self.setVisible(False)
+        except:
+            self.loginNotice.setText("Network Error")
         
     def getLoginQRcode(self):
         headers = getHeaders()
@@ -339,26 +342,32 @@ class LoginWindow(QtWidgets.QWidget):
         return login_obj, qrcode_dict
         
     def checkLogin(self, login_obj, qrcode_dict):
-        status = login_obj.login(qrcode_dict, 120)
-        if status:
-            if login_obj.check_login():
-                self.signal.emit(True)
-        else:
-            self.qrcodeTimeout = True
-            self.signal2.emit(False)
+        try:
+            status = login_obj.login(qrcode_dict, 120)
+            if status:
+                if login_obj.check_login():
+                    self.signal.emit(True)
+            else:
+                self.qrcodeTimeout = True
+                self.signal2.emit(False)
+        except:
+            self.loginNotice.setText("Network Error")
     
     def login(self):
-        cookieF = open("./cookie.txt", "r")
-        if str(cookieF.readline()).strip('\n') == "":
-            self.emptyCookie = True
-            self.loginWithQRcode()
-            self.loginMode = "QRcode"
-            cookieF.close()
-        else:
-            self.emptyCookie = False
-            self.loginWithCacheCookie()
-            self.loginMode = "cookie"
-            cookieF.close()
+        try:
+            cookieF = open("./cookie.txt", "r")
+            if str(cookieF.readline()).strip('\n') == "":
+                self.emptyCookie = True
+                self.loginWithQRcode()
+                self.loginMode = "QRcode"
+                cookieF.close()
+            else:
+                self.emptyCookie = False
+                self.loginWithCacheCookie()
+                self.loginMode = "cookie"
+                cookieF.close()
+        except:
+            self.loginNotice.setText("Network Error")
 
     def closeEvent(self, event):
         event.accept()
@@ -575,6 +584,7 @@ class RightVideoBox(QtWidgets.QLabel):
         self.selectedAllStatus = False
         self.infoSignal.connect(self.updateQuInfo)
         self.downloadSignal.connect(self.downloadStart)
+        self.infoTh = None
 
     def initUI(self):
         self.setFrameShape(QtWidgets.QFrame.Box)
@@ -650,8 +660,8 @@ class RightVideoBox(QtWidgets.QLabel):
 
     def searchVideoInfo(self):
         link = self.linkEdit.text()
-        th = threading.Thread(target=self.infoThread, args=(link,))
-        th.start()
+        self.infoTh = threading.Thread(target=self.infoThread, args=(link,))
+        self.infoTh.start()
         self.infoBox.getVideoInfo(link)
 
     def saveUserQu(self, qu):
@@ -659,10 +669,13 @@ class RightVideoBox(QtWidgets.QLabel):
             self.qu_user = 'cover' if self.qu_dict[qu] == 'cover' else int(self.qu_dict[qu])
 
     def infoThread(self, link):
-        downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
-        info_dict = downloader.get_video_info(link=link)
-        qu = downloader.get_supported_quality(info_dict)
-        self.infoSignal.emit([info_dict, qu])
+        try:
+            downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
+            info_dict = downloader.get_video_info(link=link)
+            qu = downloader.get_supported_quality(info_dict)
+            self.infoSignal.emit([info_dict, qu])
+        except:
+            find(RightLogBox, root).addLog("Network Error", "red")
     
     def addVideoBox(self, info):
         num = self.videoTable.rowCount()
@@ -708,30 +721,33 @@ class RightVideoBox(QtWidgets.QLabel):
                         th.start()
         
     def downloadThread(self, obj, link, piece_idx, piece_title):
-        if self.qu_user != 'cover':
-            downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
-            obj.downloader = downloader
-            info_dict = downloader.get_video_info(link=link)
-            info = info_dict['data']
-            info['d_type'] = 'video'
-            info['p_idx'] = piece_idx
-            info['p_title'] = piece_title
-            self.downloadSignal.emit({'obj':obj, 'info_dict':info})
-            qu = 32 if self.qu_user is None else self.qu_user
-            res = downloader.operate_download_cache(bvid=info['bvid'], quality_param=qu, 
-                                    piece_idx=piece_idx, title=piece_title, mode='n')
-            status = downloader.download(
-                info_dict, str(self.qu_user), piece_idx-1, callback=obj._progress)
-        else:
-            downloader = CoverDownloader(getHeaders(True), "./download/image", "./api.cfg")
-            info_dict = downloader.get_video_info(link=link)
-            info = info_dict['data']
-            info['d_type'] = 'cover'
-            self.downloadSignal.emit({'obj':obj, 'info_dict':info})
-            downloader.download_Cover(
-                info,
-                obj._progress
-            )
+        try:
+            if self.qu_user != 'cover':
+                downloader = VideoDownloader(getHeaders(True), "./download/video", "./api.cfg")
+                obj.downloader = downloader
+                info_dict = downloader.get_video_info(link=link)
+                info = info_dict['data']
+                info['d_type'] = 'video'
+                info['p_idx'] = piece_idx
+                info['p_title'] = piece_title
+                self.downloadSignal.emit({'obj':obj, 'info_dict':info})
+                qu = 32 if self.qu_user is None else self.qu_user
+                res = downloader.operate_download_cache(bvid=info['bvid'], quality_param=qu, 
+                                        piece_idx=piece_idx, title=piece_title, mode='n')
+                status = downloader.download(
+                    info_dict, str(self.qu_user), piece_idx-1, callback=obj._progress)
+            else:
+                downloader = CoverDownloader(getHeaders(True), "./download/image", "./api.cfg")
+                info_dict = downloader.get_video_info(link=link)
+                info = info_dict['data']
+                info['d_type'] = 'cover'
+                self.downloadSignal.emit({'obj':obj, 'info_dict':info})
+                downloader.download_Cover(
+                    info,
+                    obj._progress
+                )
+        except:
+            find(RightLogBox, root).addLog("Network Error", "red")
 
     def downloadStart(self, downloadInfo):
         info = downloadInfo['info_dict']
@@ -1362,7 +1378,10 @@ class RightWordcloudCreate(QtWidgets.QLabel):
             self.imgPreview.setPixmap(QtGui.QPixmap(path).scaled(300, 150))
 
     def searchVideoInfo(self):
-        self.infoBox.getVideoInfo(self.linkEdit.text())
+        try:
+            self.infoBox.getVideoInfo(self.linkEdit.text())
+        except:
+            self.parentLyr.rightLogBox.addLog("Network Error", "red")
 
     def createWordcloud(self):
         if self.infoBox.data is not None:
@@ -1376,12 +1395,15 @@ class RightWordcloudCreate(QtWidgets.QLabel):
             )
 
     def createThread(self, wdcloud, bvid):
-        wdcloud.set_font_path('../data/font/simhei.ttf')
-        wdcloud.get_wordcloud(bvid)
-        self.parentLyr.rightLogBox.addLog(
-            "wordcloud generate finished", "green"
-        )
-        self.signal.emit(True)
+        try:
+            wdcloud.set_font_path('../data/font/simhei.ttf')
+            wdcloud.get_wordcloud(bvid)
+            self.parentLyr.rightLogBox.addLog(
+                "wordcloud generate finished", "green"
+            )
+            self.signal.emit(True)
+        except:
+            self.parentLyr.rightLogBox.addLog("Network Error", "red")
 
     def getDownloadPath(self):
         self.downloadFolder = os.path.join(
@@ -1543,16 +1565,21 @@ class RightAutomation(QtWidgets.QLabel):
         )
 
     def dropCoinThread(self, link, link2):
-        f = open("./cookie.txt", "r")
-        t = f.readline()
-        random_like_coin(t, link, link2)
-        self.parentLyr.rightLogBox.addLog(
-            "you try to drop coin(s) to: " + link, "green"
-        )
-        self.parentLyr.rightLogBox.addLog(
-            "Video(s) from the UP " + link + " have(has) also been shared.", "green"
-        )
-        f.close
+        try:
+            f = open("./cookie.txt", "r")
+            t = f.readline()
+            random_like_coin(t, link, link2)
+            self.parentLyr.rightLogBox.addLog(
+                "you try to drop coin(s) to: " + link, "green"
+            )
+            self.parentLyr.rightLogBox.addLog(
+                "Video(s) from the UP " + link + " have(has) also been shared.", "green"
+            )
+            f.close
+        except:
+            self.parentLyr.rightLogBox.addLog(
+                "Network Error", "red"
+            )
 
     def signIn(self):
         th = threading.Thread(
@@ -1563,13 +1590,18 @@ class RightAutomation(QtWidgets.QLabel):
         )
 
     def signInThread(self):
-        f = open("./cookie.txt", "r")
-        t = f.readline()
-        auto_sign(t)
-        self.parentLyr.rightLogBox.addLog(
-            "successfully signed in today!", "green"
-        )
-        f.close
+        try:
+            f = open("./cookie.txt", "r")
+            t = f.readline()
+            auto_sign(t)
+            self.parentLyr.rightLogBox.addLog(
+                "successfully signed in today!", "green"
+            )
+            f.close
+        except:
+            self.parentLyr.rightLogBox.addLog(
+                "Network Error", "red"
+            )
 
     def autoCoinDropAndSignIn(self):
         if bool(config['auto_coin']):
@@ -1702,9 +1734,12 @@ class RightLiveBox(QtWidgets.QLabel):
         th.start()
     
     def getInfoThread(self, room_id):
-        recObj = LiveRecording(room_id, headers=getHeaders(True))
-        qus, servers = recObj.get_support_qu_server()
-        self.signal2.emit([qus, servers])
+        try:
+            recObj = LiveRecording(room_id, headers=getHeaders(True))
+            qus, servers = recObj.get_support_qu_server()
+            self.signal2.emit([qus, servers])
+        except:
+            find(RightLogBox, root).addLog("Network Error", "red")
 
     def updateQuServer(self, info):
         self.qualityBox.clear()
@@ -1763,20 +1798,26 @@ class RightLiveBox(QtWidgets.QLabel):
         os.system("start {} {}".format(config['video_player'], os.path.abspath(path)))
 
     def recordThread(self, room_id, name, qu):
-        livevideo = LiveRecording(room_id, filename=name, headers=getHeaders(True))
-        self.parentLyr.rightLogBox.addLog(
-            "start to record room %s"%room_id, "green"
-        )
-        livevideo.record_live(str(qu))
-        self.parentLyr.rightLogBox.addLog(
-            "recording finished ", "green"
-        )
+        try:
+            livevideo = LiveRecording(room_id, filename=name, headers=getHeaders(True))
+            self.parentLyr.rightLogBox.addLog(
+                "start to record room %s"%room_id, "green"
+            )
+            livevideo.record_live(str(qu))
+            self.parentLyr.rightLogBox.addLog(
+                "recording finished ", "green"
+            )
+        except:
+            find(RightLogBox, root).addLog("Network Error", "red")
 
     def commentThread(self, room_id):
-        liveComment = bilibiliDanmu(room_id)
-        while True:
-            liveComment.get_danmu(self.addCommentSignal)
-            time.sleep(2)
+        try:
+            liveComment = bilibiliDanmu(room_id)
+            while True:
+                liveComment.get_danmu(self.addCommentSignal)
+                time.sleep(2)
+        except:
+            find(RightLogBox, root).addLog("Network Error", "red")
 
     def clearAll(self):
         self.commentBox.clear()
@@ -2390,6 +2431,7 @@ class SettingWindow(QtWidgets.QWidget):
             config['auto_login'] = False
 
     def setDefault(self):
+        global config
         config = setUserConfigDefault()
         self.setConfig(config)
         find(RightLogBox, root).addLog("setting is set to default", "green")
