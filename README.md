@@ -1,8 +1,5 @@
 # Bilibili ToolBox
 
-Content
-[toc]
-
 ## 1. Intoduction
 Our project is called "Bilibili Toolbox" on PC which provides extra support for Bilibili users. Today's Bilibili software doesn't provide some services like daily Automatically dropping coins, generating word cloud, multi task downloading videos and lively recording screen. We hope to provide this to users who are familiar with computer knowledge and have the needs in this respect. To achieve these capabilities, we did a lot of analysis on the Bilibili website and looked for specific ports to enable users to connect to Bilibili. 
 
