@@ -72,8 +72,21 @@ Download the package in the final release which is named v3.0.0
 
 #### 4.3.1 Drop Coin and Sign in
 
+![automation](./pic/automation.png)
+
 #### 4.3.2 Wordcloud
+
+![wordcloud](./pic/wordcloud.png)
 
 ### 4.4 Live Record
 
+Recording function provides Bilibili Toolbox software with the function of recording live broadcasts from Bilibili. Users can record live broadcasts by inputting the RoomID numbers of anchors (also called “UP主” in Chinese) with the live broadcasts that they are interested in. 
+
+When running the function, users are required to input the RoomID of anchors with live broadcasts that they want to record (Step 1) and the file name they want to save the video (Step 2). Press the “search” button to search the information about the live broadcast (Step 3). Then users need to choose the video quality (Step 4) and server (Step 5) for recording. And finally press the “record” button to record the live video (Step 6). The text box indicated by the blue arrow (step 7) will display the real-time bullet screen in the live broadcast room.
+
+
+![record](./pic/record.png)
+
 ### 4.5 Setting
+
+![setting](./pic/setting.png)
